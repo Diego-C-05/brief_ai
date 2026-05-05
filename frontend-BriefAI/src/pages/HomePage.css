@@ -1,0 +1,373 @@
+.home-page {
+  min-height: 100vh;
+  width: 100%;
+  padding: 56px 24px 48px;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.home-container {
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-section {
+  width: 100%;
+  max-width: 1024px;
+  text-align: center;
+}
+
+.hero-badge {
+  margin: 0 auto 20px;
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-weight: 600;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.28);
+}
+
+.hero-badge svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.hero-section h1 {
+  margin: 0 0 24px;
+  font-size: clamp(2.5rem, 6vw, 3.75rem);
+  line-height: 1.05;
+  font-weight: 800;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-subtitle {
+  margin: 0 auto;
+  max-width: 960px;
+  font-size: clamp(1.06rem, 2.4vw, 1.25rem);
+  color: #475569;
+}
+
+.plan-grid {
+  margin-top: 36px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.plan-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  text-align: left;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(160deg, #ffffff 0%, #f8fafc 100%);
+  padding: 24px;
+  box-shadow: 0 20px 34px rgba(15, 23, 42, 0.09);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.plan-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(124, 58, 237, 0.2));
+  opacity: 0;
+  z-index: -2;
+  transition: opacity 0.25s ease;
+}
+
+.plan-card::after {
+  content: '';
+  position: absolute;
+  right: -42px;
+  top: -42px;
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.2), transparent 70%);
+  z-index: -1;
+}
+
+.plan-card:hover {
+  transform: translateY(-6px);
+  border-color: #bfdbfe;
+  box-shadow: 0 28px 42px rgba(15, 23, 42, 0.15);
+}
+
+.plan-card:hover::before {
+  opacity: 1;
+}
+
+.free-plan {
+  border-color: #dbeafe;
+}
+
+.premium-plan {
+  border-color: #ddd6fe;
+  background: linear-gradient(160deg, #ffffff 0%, #f5f3ff 100%);
+  box-shadow: 0 22px 38px rgba(91, 33, 182, 0.16);
+}
+
+.plan-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: #1e3a8a;
+  background: #dbeafe;
+}
+
+.plan-chip.premium {
+  color: #5b21b6;
+  background: #ede9fe;
+}
+
+.plan-card h2 {
+  margin: 14px 0 10px;
+  font-size: 1.5rem;
+}
+
+.plan-card p {
+  margin: 0;
+  color: #475569;
+}
+
+.plan-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 12px;
+}
+
+.plan-actions a {
+  text-decoration: none;
+}
+
+.plan-login-button,
+.plan-register-button {
+  min-width: 116px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-weight: 600;
+  padding: 11px 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.plan-login-button {
+  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.28);
+}
+
+.plan-login-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 36px rgba(37, 99, 235, 0.35);
+}
+
+.plan-register-button {
+  color: #334155;
+  border: 2px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.plan-register-button:hover {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+}
+
+.benefits-section {
+  width: 100%;
+  max-width: 1280px;
+  margin-top: 96px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.benefit-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 32px;
+  background: #ffffff;
+  box-shadow: 0 24px 36px rgba(15, 23, 42, 0.1);
+}
+
+.benefit-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+}
+
+.benefit-icon-wrap svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.benefit-icon-wrap.blue {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+.benefit-icon-wrap.violet {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.benefit-icon-wrap.green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.benefit-card h3 {
+  margin: 18px 0 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.benefit-card p {
+  margin: 0;
+  color: #475569;
+}
+
+.preview-section {
+  width: 100%;
+  max-width: 1024px;
+  margin-top: 96px;
+}
+
+.preview-section h2 {
+  margin: 0 0 32px;
+  text-align: center;
+  font-size: clamp(1.85rem, 4vw, 2rem);
+  font-weight: 700;
+}
+
+.preview-shell {
+  border-radius: 24px;
+  padding: 48px;
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+}
+
+.preview-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 20px 36px rgba(15, 23, 42, 0.11);
+  padding: 24px;
+}
+
+.preview-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.sentiment-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #166534;
+  background: #dcfce7;
+}
+
+.preview-card h3 {
+  margin: 16px 0 12px;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.preview-card p {
+  margin: 0 0 16px;
+  color: #475569;
+}
+
+.preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tag-chip {
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.tag-chip.ai {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.tag-chip.openai {
+  color: #6d28d9;
+  background: #ede9fe;
+}
+
+.tag-chip.safety {
+  color: #475569;
+  background: #e2e8f0;
+}
+
+.preview-actions {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
+.home-footer {
+  margin-top: 96px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+@media (min-width: 900px) {
+  .benefits-section {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 899px) {
+  .plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-shell {
+    padding: 24px;
+  }
+}

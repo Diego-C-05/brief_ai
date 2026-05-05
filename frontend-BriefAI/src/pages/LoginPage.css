@@ -1,0 +1,112 @@
+.app-shell > .auth-panel {
+  flex: 0 1 460px;
+  margin: auto;
+}
+
+.auth-panel,
+.home-panel {
+  width: min(100%, 460px);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: var(--panel-shadow);
+  backdrop-filter: blur(2px);
+}
+
+.auth-panel .eyebrow {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.auth-panel h1 {
+  margin: 8px 0 8px;
+  font-size: clamp(36px, 4vw, 44px);
+  line-height: 1;
+}
+
+.auth-panel .subtitle {
+  margin-bottom: 24px;
+}
+
+.top-link-row {
+  margin: -8px 0 16px;
+  text-align: right;
+}
+
+.login-form {
+  display: grid;
+  gap: 12px;
+}
+
+.login-form label {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.login-form input,
+.login-form button {
+  border-radius: 12px;
+  border: 1px solid var(--panel-border);
+  font: inherit;
+}
+
+.login-form input {
+  background: var(--input-bg);
+  color: var(--text);
+  padding: 12px 14px;
+}
+
+.login-form input:focus-visible,
+.login-form button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.login-form button {
+  margin-top: 8px;
+  cursor: pointer;
+  padding: 12px 14px;
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(120deg, var(--accent-a), var(--accent-b));
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 6px;
+  color: var(--text);
+}
+
+.checkbox-row input {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+}
+
+.checkbox-row span {
+  font-size: 14px;
+}
+
+.error {
+  margin: 8px 0 0;
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.auth-footer {
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.text-link {
+  color: var(--accent-b);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
