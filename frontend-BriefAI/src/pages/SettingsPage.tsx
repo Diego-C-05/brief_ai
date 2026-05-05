@@ -15,6 +15,11 @@ type SettingsSnapshot = {
   subscriptionState: SubscriptionState
 }
 
+type ProfileIdentity = {
+  username: string
+  email: string
+}
+
 const STORAGE_KEY = 'briefai-settings'
 const ONBOARDING_KEY = 'briefai-onboarding'
 const DEFAULT_MACRO_TOPICS = ['Scienza & Ricerca']
@@ -62,6 +67,10 @@ function persistSettings(snapshot: SettingsSnapshot) {
 // Pagina Impostazioni: gestisce preferenze feed e account con una struttura a tab.
 function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('interests')
+  const [profileIdentity, setProfileIdentity] = useState<ProfileIdentity>({
+    username: '',
+    email: '',
+  })
   const [selectedMacroTopics, setSelectedMacroTopics] = useState<string[]>(() =>
     readInitialSettings().selectedMacroTopics,
   )
@@ -75,6 +84,10 @@ function SettingsPage() {
     fetchProfile()
       .then((res) => {
         if (res && res.profile) {
+          setProfileIdentity({
+            username: res.profile.username || '',
+            email: res.profile.email || '',
+          })
           setSelectedMacroTopics(res.profile.macroTopics || [])
           setKeywords(res.profile.keywords || [])
         }
@@ -182,8 +195,8 @@ function SettingsPage() {
             </div>
           ) : (
             <AccountSettings
-              username="John Doe"
-              email="john@example.com"
+              username={profileIdentity.username || 'Utente'}
+              email={profileIdentity.email || 'Email non disponibile'}
               subscriptionState={subscriptionState}
               onUpgrade={handleUpgrade}
               onCancelSubscription={handleCancelSubscription}

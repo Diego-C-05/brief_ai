@@ -1,6 +1,17 @@
 const BASE = import.meta.env.VITE_API_URL as string
 import { getAuthHeader } from './authService'
 
+export type ProfileResponse = {
+  success?: boolean
+  profile?: {
+    userId?: string
+    username?: string
+    email?: string
+    macroTopics?: string[]
+    keywords?: string[]
+  }
+}
+
 const authFetch = (path: string, options: RequestInit = {}) =>
   fetch(`${BASE}${path}`, {
     ...options,
@@ -29,7 +40,7 @@ export const fetchOverview = () =>
 
 // GET /api/profile
 export const fetchProfile = () =>
-  authFetch('/api/profile').then((r) => r.json())
+  authFetch('/api/profile').then((r) => r.json() as Promise<ProfileResponse>)
 
 // PUT /api/profile
 export const updateProfile = async (data: {
