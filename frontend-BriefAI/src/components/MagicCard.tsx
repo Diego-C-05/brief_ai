@@ -1,6 +1,4 @@
 import type { ReactNode } from 'react'
-import { useState } from 'react'
-import { sendFeedback } from '../services/feedbackService'
 
 type MagicCardProps = {
   articleId?: string
@@ -12,16 +10,18 @@ type MagicCardProps = {
   summary: string
   tags: string[]
   entities: string[]
+  voteState: 1 | -1 | null
+  votePending?: boolean
+  onVoteChange: (articleId: string, nextVote: 1 | -1 | null) => void
 }
 
 // Card notizia: mostra fonte, sentiment, testo, tag, entità e azioni rapide.
-function MagicCard({ articleId, articleUrl, source, timeAgo, sentiment, title, summary, tags, entities }: MagicCardProps) {
-  const [voted, setVoted] = useState<1 | -1 | null>(null)
+function MagicCard({ articleId, articleUrl, source, timeAgo, sentiment, title, summary, tags, entities, voteState, votePending = false, onVoteChange }: MagicCardProps) {
+  const handleVote = (clickedVote: 1 | -1) => {
+    if (!articleId || votePending) return
 
-  const handleVote = (vote: 1 | -1) => {
-    if (voted !== null) return
-    setVoted(vote)
-    if (articleId) sendFeedback(articleId, vote)
+    const nextVote = voteState === clickedVote ? null : clickedVote
+    onVoteChange(articleId, nextVote)
   }
 
   return (
@@ -79,8 +79,8 @@ function MagicCard({ articleId, articleUrl, source, timeAgo, sentiment, title, s
           label="Mi piace"
           tone="like"
           onClick={() => handleVote(1)}
-          disabled={voted !== null}
-          style={{ opacity: voted === -1 ? 0.4 : 1 }}
+          disabled={votePending}
+          style={{ opacity: voteState === -1 ? 0.4 : 1 }}
         >
           <ThumbUpIcon />
         </ActionButton>
@@ -88,8 +88,8 @@ function MagicCard({ articleId, articleUrl, source, timeAgo, sentiment, title, s
           label="Non mi piace"
           tone="dislike"
           onClick={() => handleVote(-1)}
-          disabled={voted !== null}
-          style={{ opacity: voted === 1 ? 0.4 : 1 }}
+          disabled={votePending}
+          style={{ opacity: voteState === 1 ? 0.4 : 1 }}
         >
           <ThumbDownIcon />
         </ActionButton>

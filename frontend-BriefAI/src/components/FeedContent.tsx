@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import MagicCard from './MagicCard'
 import { fetchPersonalizedFeed } from '../services/feedService'
+import { sendFeedback } from '../services/feedbackService'
 import type { Article } from '../types/article'
 
 type FeedContentProps = {
@@ -11,6 +12,46 @@ type FeedContentProps = {
 function FeedContent({ sentimentFilter = null, topicsFilter = null }: FeedContentProps) {
   const [articles, setArticles] = useState<Article[]>([])
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [voteByArticle, setVoteByArticle] = useState<Record<string, 1 | -1 | null>>({})
+  const [pendingByArticle, setPendingByArticle] = useState<Record<string, boolean>>({})
+  const [voteError, setVoteError] = useState<string | null>(null)
+
+  const sendVoteDelta = async (articleId: string, previousVote: 1 | -1 | null, nextVote: 1 | -1 | null) => {
+    // Without server idempotency, simulate undo by applying compensating vote.
+    if (previousVote === nextVote) return
+
+    if (previousVote === null && nextVote !== null) {
+      await sendFeedback(articleId, nextVote)
+      return
+    }
+
+    if (previousVote !== null && nextVote === null) {
+      await sendFeedback(articleId, previousVote === 1 ? -1 : 1)
+      return
+    }
+
+    if (previousVote !== null && nextVote !== null) {
+      await sendFeedback(articleId, nextVote)
+    }
+  }
+
+  const handleVoteChange = async (articleId: string, nextVote: 1 | -1 | null) => {
+    const previousVote = voteByArticle[articleId] ?? null
+    if (previousVote === nextVote || pendingByArticle[articleId]) return
+
+    setVoteError(null)
+    setVoteByArticle((prev) => ({ ...prev, [articleId]: nextVote }))
+    setPendingByArticle((prev) => ({ ...prev, [articleId]: true }))
+
+    try {
+      await sendVoteDelta(articleId, previousVote, nextVote)
+    } catch {
+      setVoteByArticle((prev) => ({ ...prev, [articleId]: previousVote }))
+      setVoteError('Impossibile aggiornare il voto. Riprova.')
+    } finally {
+      setPendingByArticle((prev) => ({ ...prev, [articleId]: false }))
+    }
+  }
 
 // Prende il fetch del feed personalizzato e popola la variabile di stato con i dati
   useEffect(() => {fetchPersonalizedFeed().then((data) => {
@@ -30,6 +71,7 @@ function FeedContent({ sentimentFilter = null, topicsFilter = null }: FeedConten
 {/* Gestione degli stati*/}
       {status === 'loading' && <p>Caricamento feed...</p>}
       {status === 'error' && <p>Errore nel caricamento del feed.</p>}
+      {voteError && <p className="feed-no-results">{voteError}</p>}
 {/*Render della lista di articoli se il caricamento è andato a buon fine*/}
       {status === 'ok' && (
         <>
@@ -78,6 +120,9 @@ function FeedContent({ sentimentFilter = null, topicsFilter = null }: FeedConten
                           summary={a.summary}
                           tags={a.macroTopics?.length ? a.macroTopics : (a.trendingTopics || [a.category])}
                           entities={a.entities || []}
+                          voteState={voteByArticle[a.uniqueKey] ?? null}
+                          votePending={pendingByArticle[a.uniqueKey] ?? false}
+                          onVoteChange={handleVoteChange}
                         />
                       ))}
                     </div>
