@@ -121,7 +121,6 @@ function HomePage() {
               <footer className="preview-actions" aria-label="Azioni articolo">
                 <span>👍 Mi piace</span>
                 <span>💾 Salva</span>
-                <span>🔗 Condividi</span>
               </footer>
             </article>
           </div>

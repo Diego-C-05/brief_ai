@@ -96,9 +96,6 @@ function MagicCard({ articleId, articleUrl, source, timeAgo, sentiment, title, s
         <ActionButton label="Salva" tone="save">
           <BookmarkIcon />
         </ActionButton>
-        <ActionButton label="Condividi" tone="share">
-          <ShareIcon />
-        </ActionButton>
       </footer>
     </article>
   )
@@ -140,14 +137,6 @@ function BookmarkIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M6 3a2 2 0 0 0-2 2v16l8-4 8 4V5a2 2 0 0 0-2-2H6Z" />
-    </svg>
-  )
-}
-
-function ShareIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M18 8a3 3 0 1 0-2.82-4h-.01A3 3 0 0 0 18 8ZM6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm12-4a3 3 0 0 0-2.83 2H15L9 10V8.8A3 3 0 1 0 7.4 10l5.2 2.6v.4a3 3 0 1 0 1.4 2.4V14l5.16-2.58A3 3 0 0 0 18 11Z" />
     </svg>
   )
 }
