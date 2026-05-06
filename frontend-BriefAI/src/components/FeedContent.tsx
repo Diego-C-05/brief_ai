@@ -64,6 +64,7 @@ function FeedContent({ sentimentFilter = null, topicsFilter = null }: FeedConten
                         <MagicCard
                           key={a.uniqueKey}
                           articleId={a.uniqueKey}
+                          articleUrl={a.url}
                           source={a.source}
                           timeAgo={new Date(a.pubDate).toLocaleString()}
                           sentiment={

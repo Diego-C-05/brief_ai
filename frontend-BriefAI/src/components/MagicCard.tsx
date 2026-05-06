@@ -4,6 +4,7 @@ import { sendFeedback } from '../services/feedbackService'
 
 type MagicCardProps = {
   articleId?: string
+  articleUrl?: string
   source: string
   timeAgo: string
   sentiment: 'Positivo' | 'Negativo' | 'Neutrale'
@@ -14,7 +15,7 @@ type MagicCardProps = {
 }
 
 // Card notizia: mostra fonte, sentiment, testo, tag, entità e azioni rapide.
-function MagicCard({ articleId, source, timeAgo, sentiment, title, summary, tags, entities }: MagicCardProps) {
+function MagicCard({ articleId, articleUrl, source, timeAgo, sentiment, title, summary, tags, entities }: MagicCardProps) {
   const [voted, setVoted] = useState<1 | -1 | null>(null)
 
   const handleVote = (vote: 1 | -1) => {
@@ -35,7 +36,20 @@ function MagicCard({ articleId, source, timeAgo, sentiment, title, summary, tags
         <span className={`sentiment-badge ${sentiment.toLowerCase()}`}>{sentiment}</span>
       </header>
 
-      <h3 className="magic-card-title">{title}</h3>
+      {articleUrl ? (
+        <h3 className="magic-card-title">
+          <a
+            href={articleUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="magic-card-title-link"
+          >
+            {title}
+          </a>
+        </h3>
+      ) : (
+        <h3 className="magic-card-title">{title}</h3>
+      )}
       <p className="magic-card-summary">{summary}</p>
 
       {/* Tag tematici: servono a classificare velocemente la notizia. */}

@@ -5,3 +5,6 @@ onCancelSubscription e onUpgrade sono void (AccountSettings.tsx)
 in feedservices.ts non capisco se il token è quello che ho impostato io o è random
 
 email non va bene perchè viene accettata a prescindere anche se non ha senso
+
+
+togli link dagli articoli processed

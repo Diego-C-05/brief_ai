@@ -283,6 +283,17 @@
   transition: color 180ms ease;
 }
 
+.magic-card-title-link {
+  color: inherit;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.magic-card-title-link:hover,
+.magic-card-title-link:focus-visible {
+  text-decoration: underline;
+}
+
 .magic-card:hover .magic-card-title {
   color: #2563eb;
 }
