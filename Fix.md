@@ -108,17 +108,6 @@ Data: May 7, 2026
 
 ---
 
-## Testing Consigliato
-
-1. **Registrazione con email non valida** → Deve fallire
-2. **Upgrade a Pro** → Deve aggiornare DB e mostrare data scadenza reale
-3. **Cancel Subscription** → Deve tornare a Free e pulire expiry
-4. **Articoli Processati** → Scaricare uno e verificare che URL/link siano rimossi
-5. **FeedService** → Verificare che userId viene sempre recuperato correttamente
-6. **Salva Articolo** → Cliccare bottone bookmark, deve disabilitarsi durante il caricamento e cambiare stile visivo se salvato
-
----
-
 ## Credenziali Configurate
 
 - **MongoDB**: Atlas cluster (briefai-cluster)
