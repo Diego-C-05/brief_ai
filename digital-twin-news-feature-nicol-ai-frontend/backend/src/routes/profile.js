@@ -32,6 +32,8 @@ router.get('/', auth, async (req, res) => {
       weights: userWeights,
       preferredSources: user.preferredSources || [],
       lastFeedGeneratedAt: user.lastFeedGeneratedAt || null,
+      subscriptionPlan: user.subscriptionPlan || 'free',
+      subscriptionExpiresAt: user.subscriptionExpiresAt || null,
     };
 
     if (userProfile) {
@@ -40,6 +42,8 @@ router.get('/', auth, async (req, res) => {
       profile.weights = userProfile.weights || profile.weights;
       profile.preferredSources = userProfile.preferredSources || profile.preferredSources;
       profile.lastFeedGeneratedAt = userProfile.lastFeedGeneratedAt || profile.lastFeedGeneratedAt;
+      profile.subscriptionPlan = userProfile.subscriptionPlan || profile.subscriptionPlan;
+      profile.subscriptionExpiresAt = userProfile.subscriptionExpiresAt || profile.subscriptionExpiresAt;
     }
 
     return res.json({ success: true, profile });
@@ -53,7 +57,7 @@ router.get('/', auth, async (req, res) => {
 
 router.put('/', auth, async (req, res) => {
   try {
-    const { macroTopics, keywords, preferredSources } = req.body;
+    const { macroTopics, keywords, preferredSources, subscriptionState } = req.body;
 
     const user = await User.findOne({ userId: req.user.userId });
     if (!user) {
@@ -66,6 +70,16 @@ router.put('/', auth, async (req, res) => {
     if (macroTopics) user.macroTopics = macroTopics;
     if (keywords) user.keywords = keywords;
     if (preferredSources) user.preferredSources = preferredSources;
+    if (subscriptionState) {
+      // subscriptionState expected to be 'free' or 'pro'
+      user.subscriptionPlan = subscriptionState === 'pro' ? 'pro' : 'free';
+      if (subscriptionState === 'pro') {
+        // set expiry to 30 days from now by default
+        user.subscriptionExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      } else {
+        user.subscriptionExpiresAt = null;
+      }
+    }
 
     user.updatedAt = new Date();
     await user.save();
@@ -78,6 +92,8 @@ router.put('/', auth, async (req, res) => {
           macroTopics: user.macroTopics,
           keywords: user.keywords,
           preferredSources: user.preferredSources,
+          subscriptionPlan: user.subscriptionPlan,
+          subscriptionExpiresAt: user.subscriptionExpiresAt,
           updatedAt: new Date(),
         },
         { upsert: true }
@@ -97,6 +113,8 @@ router.put('/', auth, async (req, res) => {
         keywords: user.keywords,
         weights,
         preferredSources: user.preferredSources,
+        subscriptionPlan: user.subscriptionPlan,
+        subscriptionExpiresAt: user.subscriptionExpiresAt,
       },
     });
   } catch (err) {

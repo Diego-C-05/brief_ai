@@ -30,6 +30,24 @@ router.post('/register', async (req, res) => {
       });
     }
 
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(String(email).toLowerCase())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email non valida.',
+      });
+    }
+
+    // Password validation: min 8 chars, 1 uppercase, 1 number
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password deve avere almeno 8 caratteri, 1 maiuscola e 1 numero.',
+      });
+    }
+
     const existingUser = await User.findOne({
       $or: [{ email }, { username }],
     });

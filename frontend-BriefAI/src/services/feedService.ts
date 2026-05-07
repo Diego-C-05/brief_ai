@@ -1,5 +1,5 @@
 import type { Article } from '../types/article'
-import { getAuthHeader, decodeToken } from './authService'
+import { getAuthHeader, decodeToken, getMe } from './authService'
 
 const N8N = import.meta.env.VITE_N8N_URL
 
@@ -9,8 +9,19 @@ export const fetchPersonalizedFeed = async (): Promise<Article[]> => {
   if (!token) throw new Error('Non autenticato')
 
   const payload = decodeToken(token)
-  const userId: string = payload?.userId
-  if (!userId) throw new Error('Token non valido')
+  let userId: string = payload?.userId
+
+  // Fallback: if token decoding failed, ask backend who we are
+  if (!userId) {
+    try {
+      const me = await getMe()
+      userId = me?.user?.userId
+    } catch (e) {
+      // ignore and let later check throw
+    }
+  }
+
+  if (!userId) throw new Error('Token non valido o utente non riconosciuto')
 
   const res = await fetch(`${N8N}/briefai/feed`, {
     method: 'POST',

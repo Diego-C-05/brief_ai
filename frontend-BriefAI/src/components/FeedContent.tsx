@@ -1,20 +1,45 @@
 import { useEffect, useState } from 'react'
 import MagicCard from './MagicCard'
 import { fetchPersonalizedFeed } from '../services/feedService'
-import { sendFeedback } from '../services/feedbackService'
+import { sendFeedback, saveArticle } from '../services/feedbackService'
 import type { Article } from '../types/article'
 
 type FeedContentProps = {
   sentimentFilter?: string | null
   topicsFilter?: string | null
+  preferenceFilter?: string | null
 }
 
-function FeedContent({ sentimentFilter = null, topicsFilter = null }: FeedContentProps) {
+function FeedContent({ sentimentFilter = null, topicsFilter = null, preferenceFilter = null }: FeedContentProps) {
   const [articles, setArticles] = useState<Article[]>([])
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading')
   const [voteByArticle, setVoteByArticle] = useState<Record<string, 1 | -1 | null>>({})
   const [pendingByArticle, setPendingByArticle] = useState<Record<string, boolean>>({})
+  const [savedByArticle, setSavedByArticle] = useState<Record<string, boolean>>({})
+  const [savePendingByArticle, setSavePendingByArticle] = useState<Record<string, boolean>>({})
   const [voteError, setVoteError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
+  // Carica articoli salvati e voti da localStorage
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('briefai_saved_articles') || '{}')
+      setSavedByArticle(saved)
+      const votes = JSON.parse(localStorage.getItem('briefai_voted_articles') || '{}')
+      setVoteByArticle(votes)
+    } catch (e) {
+      console.warn('Errore caricamento preferenze:', e)
+    }
+  }, [])
+
+  // Persisti voti in localStorage quando cambiano
+  useEffect(() => {
+    try {
+      localStorage.setItem('briefai_voted_articles', JSON.stringify(voteByArticle))
+    } catch (e) {
+      console.warn('Errore salvataggio voti:', e)
+    }
+  }, [voteByArticle])
 
   const sendVoteDelta = async (articleId: string, previousVote: 1 | -1 | null, nextVote: 1 | -1 | null) => {
     // Without server idempotency, simulate undo by applying compensating vote.
@@ -53,6 +78,23 @@ function FeedContent({ sentimentFilter = null, topicsFilter = null }: FeedConten
     }
   }
 
+  const handleSaveArticle = async (articleId: string) => {
+    if (savePendingByArticle[articleId]) return
+
+    setSaveError(null)
+    setSavedByArticle((prev) => ({ ...prev, [articleId]: !prev[articleId] }))
+    setSavePendingByArticle((prev) => ({ ...prev, [articleId]: true }))
+
+    try {
+      await saveArticle(articleId)
+    } catch {
+      setSavedByArticle((prev) => ({ ...prev, [articleId]: !prev[articleId] }))
+      setSaveError('Impossibile salvare l\'articolo. Riprova.')
+    } finally {
+      setSavePendingByArticle((prev) => ({ ...prev, [articleId]: false }))
+    }
+  }
+
 // Prende il fetch del feed personalizzato e popola la variabile di stato con i dati
   useEffect(() => {fetchPersonalizedFeed().then((data) => {
         setArticles(data)
@@ -72,6 +114,7 @@ function FeedContent({ sentimentFilter = null, topicsFilter = null }: FeedConten
       {status === 'loading' && <p>Caricamento feed...</p>}
       {status === 'error' && <p>Errore nel caricamento del feed.</p>}
       {voteError && <p className="feed-no-results">{voteError}</p>}
+      {saveError && <p className="feed-no-results">{saveError}</p>}
 {/*Render della lista di articoli se il caricamento è andato a buon fine*/}
       {status === 'ok' && (
         <>
@@ -79,13 +122,13 @@ function FeedContent({ sentimentFilter = null, topicsFilter = null }: FeedConten
           {(() => {
             const matchesTopic = (a: Article) => {
               if (!topicsFilter || topicsFilter === 'All Topics') return true
-              const topic = topicsFilter.toLowerCase()
-              const catMatch = (a.category || '').toLowerCase() === topic
+              const topic = topicsFilter.toLowerCase().trim()
+              const catMatch = (a.category || '').toLowerCase().trim() === topic
               const trending = (a.trendingTopics || []).some((t) =>
-                String(t || '').toLowerCase() === topic
+                String(t || '').toLowerCase().trim() === topic
               )
               const macroTopicMatch = (a.macroTopics || []).some((t) =>
-                String(t || '').toLowerCase() === topic
+                String(t || '').toLowerCase().trim() === topic
               )
               return catMatch || trending || macroTopicMatch
             }
@@ -95,7 +138,18 @@ function FeedContent({ sentimentFilter = null, topicsFilter = null }: FeedConten
               return a.sentiment === sentimentFilter
             }
 
-            const filtered = articles.filter((a) => matchesSentiment(a) && matchesTopic(a))
+            const matchesPreference = (a: Article) => {
+              if (!preferenceFilter || preferenceFilter === 'Tutti') return true
+              if (preferenceFilter === 'Like') {
+                return voteByArticle[a.uniqueKey] === 1
+              }
+              if (preferenceFilter === 'Salvati') {
+                return savedByArticle[a.uniqueKey] === true
+              }
+              return true
+            }
+
+            const filtered = articles.filter((a) => matchesSentiment(a) && matchesTopic(a) && matchesPreference(a))
 
             return (
               <div>
@@ -122,7 +176,10 @@ function FeedContent({ sentimentFilter = null, topicsFilter = null }: FeedConten
                           entities={a.entities || []}
                           voteState={voteByArticle[a.uniqueKey] ?? null}
                           votePending={pendingByArticle[a.uniqueKey] ?? false}
+                          isSaved={savedByArticle[a.uniqueKey] ?? false}
+                          savePending={savePendingByArticle[a.uniqueKey] ?? false}
                           onVoteChange={handleVoteChange}
+                          onSave={handleSaveArticle}
                         />
                       ))}
                     </div>

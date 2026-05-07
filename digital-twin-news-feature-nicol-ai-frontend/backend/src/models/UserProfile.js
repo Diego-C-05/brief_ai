@@ -16,6 +16,8 @@ const userProfileSchema = new mongoose.Schema(
       },
     },
     preferredSources: { type: [String], default: [] },
+    subscriptionPlan: { type: String, enum: ['free', 'pro'], default: 'free' },
+    subscriptionExpiresAt: Date,
     lastFeedGeneratedAt: Date,
     updatedAt: { type: Date, default: Date.now },
   },

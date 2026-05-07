@@ -39,6 +39,13 @@ function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
       // ignore parsing errors
     }
 
+    // Basic email format validation on client
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(String(email).toLowerCase())) {
+      setError('Formato email non valido.')
+      return
+    }
+
     try {
       await register({
         email,

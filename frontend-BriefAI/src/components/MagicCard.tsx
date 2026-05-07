@@ -12,16 +12,24 @@ type MagicCardProps = {
   entities: string[]
   voteState: 1 | -1 | null
   votePending?: boolean
+  isSaved?: boolean
+  savePending?: boolean
   onVoteChange: (articleId: string, nextVote: 1 | -1 | null) => void
+  onSave?: (articleId: string) => void
 }
 
 // Card notizia: mostra fonte, sentiment, testo, tag, entità e azioni rapide.
-function MagicCard({ articleId, articleUrl, source, timeAgo, sentiment, title, summary, tags, entities, voteState, votePending = false, onVoteChange }: MagicCardProps) {
+function MagicCard({ articleId, articleUrl, source, timeAgo, sentiment, title, summary, tags, entities, voteState, votePending = false, isSaved = false, savePending = false, onVoteChange, onSave }: MagicCardProps) {
   const handleVote = (clickedVote: 1 | -1) => {
     if (!articleId || votePending) return
 
     const nextVote = voteState === clickedVote ? null : clickedVote
     onVoteChange(articleId, nextVote)
+  }
+
+  const handleSave = () => {
+    if (!articleId || savePending || !onSave) return
+    onSave(articleId)
   }
 
   return (
@@ -78,22 +86,22 @@ function MagicCard({ articleId, articleUrl, source, timeAgo, sentiment, title, s
         <ActionButton
           label="Mi piace"
           tone="like"
+          isActive={voteState === 1}
           onClick={() => handleVote(1)}
           disabled={votePending}
-          style={{ opacity: voteState === -1 ? 0.4 : 1 }}
         >
           <ThumbUpIcon />
         </ActionButton>
         <ActionButton
           label="Non mi piace"
           tone="dislike"
+          isActive={voteState === -1}
           onClick={() => handleVote(-1)}
           disabled={votePending}
-          style={{ opacity: voteState === 1 ? 0.4 : 1 }}
         >
           <ThumbDownIcon />
         </ActionButton>
-        <ActionButton label="Salva" tone="save">
+        <ActionButton label="Salva" tone="save" isActive={isSaved} onClick={handleSave} disabled={savePending}>
           <BookmarkIcon />
         </ActionButton>
       </footer>
@@ -102,11 +110,11 @@ function MagicCard({ articleId, articleUrl, source, timeAgo, sentiment, title, s
 }
 
 // Piccolo bottone riutilizzabile per mantenere coerente il footer azioni.
-function ActionButton({ label, tone, children, onClick, disabled, style }: { label: string; tone: string; children: ReactNode; onClick?: () => void; disabled?: boolean; style?: React.CSSProperties }) {
+function ActionButton({ label, tone, children, onClick, disabled, isActive, style }: { label: string; tone: string; children: ReactNode; onClick?: () => void; disabled?: boolean; isActive?: boolean; style?: React.CSSProperties }) {
   return (
     <button
       type="button"
-      className={`action-button ${tone}`}
+      className={`action-button ${tone}${isActive ? ' active' : ''}`}
       aria-label={label}
       onClick={onClick}
       disabled={disabled}

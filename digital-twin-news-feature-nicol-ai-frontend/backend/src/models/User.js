@@ -31,6 +31,9 @@ const userSchema = new mongoose.Schema(
     preferredSources: [String],
 
     lastFeedGeneratedAt: Date,
+    subscriptionPlan: { type: String, enum: ['free', 'pro'], default: 'free' },
+    subscriptionExpiresAt: Date,
+
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
@@ -65,8 +68,10 @@ userSchema.post('save', async function syncUserProfile(doc) {
         keywords: doc.keywords || [],
         weights: weightsObject,
         // sentimentPreference removed: we no longer persist a global sentiment preference
-        preferredSources: doc.preferredSources || [],
-        lastFeedGeneratedAt: doc.lastFeedGeneratedAt || null,
+          preferredSources: doc.preferredSources || [],
+          lastFeedGeneratedAt: doc.lastFeedGeneratedAt || null,
+          subscriptionPlan: doc.subscriptionPlan || 'free',
+          subscriptionExpiresAt: doc.subscriptionExpiresAt || null,
         updatedAt: new Date(),
       },
     },

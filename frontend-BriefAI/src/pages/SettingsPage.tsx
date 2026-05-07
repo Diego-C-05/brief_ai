@@ -13,6 +13,7 @@ type SettingsSnapshot = {
   selectedMacroTopics: string[]
   keywords: string[]
   subscriptionState: SubscriptionState
+  subscriptionExpiresAt?: string | null
 }
 
 type ProfileIdentity = {
@@ -43,6 +44,7 @@ function readInitialSettings(): SettingsSnapshot {
       storedSnapshot?.selectedMacroTopics ?? onboardingSnapshot?.selectedTopics ?? DEFAULT_MACRO_TOPICS,
     keywords: storedSnapshot?.keywords ?? onboardingSnapshot?.keywords ?? [],
     subscriptionState: storedSnapshot?.subscriptionState ?? 'free',
+    subscriptionExpiresAt: storedSnapshot?.subscriptionExpiresAt ?? null,
   }
 }
 
@@ -79,6 +81,9 @@ function SettingsPage() {
   const [subscriptionState, setSubscriptionState] = useState<SubscriptionState>(
     () => readInitialSettings().subscriptionState,
   )
+  const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(() =>
+    (readInitialSettings() as any).subscriptionExpiresAt ?? null,
+  )
 
   useEffect(() => {
     fetchProfile()
@@ -90,6 +95,8 @@ function SettingsPage() {
           })
           setSelectedMacroTopics(res.profile.macroTopics || [])
           setKeywords(res.profile.keywords || [])
+          if (res.profile.subscriptionPlan) setSubscriptionState(res.profile.subscriptionPlan as SubscriptionState)
+          setSubscriptionExpiresAt(res.profile.subscriptionExpiresAt || null)
         }
       })
       .catch(() => {})
@@ -110,11 +117,11 @@ function SettingsPage() {
         if (res && res.profile) {
           setSelectedMacroTopics(res.profile.macroTopics || selectedMacroTopics)
         }
-        persistSettings({ selectedMacroTopics, keywords, subscriptionState })
+        persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
       })
       .catch(() => {
         // fallback local persist
-        persistSettings({ selectedMacroTopics, keywords, subscriptionState })
+        persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
       })
   }
 
@@ -142,23 +149,44 @@ function SettingsPage() {
         if (res && res.profile) {
           setKeywords(res.profile.keywords || keywords)
         }
-        persistSettings({ selectedMacroTopics, keywords, subscriptionState })
+        persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
       })
       .catch(() => {
-        persistSettings({ selectedMacroTopics, keywords, subscriptionState })
+        persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
       })
   }
 
-  const handleUpgrade = () => {
-    const nextSubscriptionState: SubscriptionState = 'pro'
-    setSubscriptionState(nextSubscriptionState)
-    persistSettings({ selectedMacroTopics, keywords, subscriptionState: nextSubscriptionState })
+  const handleUpgrade = async () => {
+    try {
+      const res = await updateProfile({ subscriptionState: 'pro' })
+      if (res && res.profile) {
+        setSubscriptionState((res.profile.subscriptionPlan as SubscriptionState) || 'pro')
+        setSubscriptionExpiresAt(res.profile.subscriptionExpiresAt || null)
+        persistSettings({ selectedMacroTopics, keywords, subscriptionState: (res.profile.subscriptionPlan as SubscriptionState) || 'pro', subscriptionExpiresAt: res.profile.subscriptionExpiresAt || null })
+      }
+    } catch (e) {
+      // fallback local only
+      const nextSubscriptionState: SubscriptionState = 'pro'
+      setSubscriptionState(nextSubscriptionState)
+      setSubscriptionExpiresAt(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString())
+      persistSettings({ selectedMacroTopics, keywords, subscriptionState: nextSubscriptionState, subscriptionExpiresAt })
+    }
   }
 
-  const handleCancelSubscription = () => {
-    const nextSubscriptionState: SubscriptionState = 'free'
-    setSubscriptionState(nextSubscriptionState)
-    persistSettings({ selectedMacroTopics, keywords, subscriptionState: nextSubscriptionState })
+  const handleCancelSubscription = async () => {
+    try {
+      const res = await updateProfile({ subscriptionState: 'free' })
+      if (res && res.profile) {
+        setSubscriptionState((res.profile.subscriptionPlan as SubscriptionState) || 'free')
+        setSubscriptionExpiresAt(res.profile.subscriptionExpiresAt || null)
+        persistSettings({ selectedMacroTopics, keywords, subscriptionState: (res.profile.subscriptionPlan as SubscriptionState) || 'free', subscriptionExpiresAt: res.profile.subscriptionExpiresAt || null })
+      }
+    } catch (e) {
+      const nextSubscriptionState: SubscriptionState = 'free'
+      setSubscriptionState(nextSubscriptionState)
+      setSubscriptionExpiresAt(null)
+      persistSettings({ selectedMacroTopics, keywords, subscriptionState: nextSubscriptionState, subscriptionExpiresAt })
+    }
   }
 
   return (
@@ -198,6 +226,7 @@ function SettingsPage() {
               username={profileIdentity.username || 'Utente'}
               email={profileIdentity.email || 'Email non disponibile'}
               subscriptionState={subscriptionState}
+              subscriptionExpiresAt={subscriptionExpiresAt}
               onUpgrade={handleUpgrade}
               onCancelSubscription={handleCancelSubscription}
             />

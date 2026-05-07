@@ -4,6 +4,8 @@ type FeedTopbarProps = {
   onSentimentChange?: (sentiment: string) => void
   topicsFilter?: string | null
   onTopicChange?: (topic: string) => void
+  preferenceFilter?: string | null
+  onPreferenceChange?: (preference: string) => void
 }
 
 function FeedTopbar({
@@ -12,6 +14,8 @@ function FeedTopbar({
   onSentimentChange,
   topicsFilter = null,
   onTopicChange,
+  preferenceFilter = null,
+  onPreferenceChange,
 }: FeedTopbarProps) {
   return (
     <header
@@ -54,6 +58,19 @@ function FeedTopbar({
               <option>Social Media & Cultura</option>
               <option>Salute & Medicina</option>
               <option>Trasporti & Mobilità</option>
+            </select>
+          </label>
+
+          <label className="feed-filter-control" htmlFor="preference-filter">
+            <span className="feed-filter-label">Preferenza</span>
+            <select
+              id="preference-filter"
+              value={preferenceFilter || 'Tutti'}
+              onChange={(e) => onPreferenceChange?.(e.target.value)}
+            >
+              <option>Tutti</option>
+              <option>Like</option>
+              <option>Salvati</option>
             </select>
           </label>
         </nav>

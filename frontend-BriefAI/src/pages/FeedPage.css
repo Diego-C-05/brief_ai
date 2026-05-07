@@ -388,6 +388,24 @@
   background: #f5f3ff;
 }
 
+.action-button.like.active {
+  color: #16a34a;
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.action-button.dislike.active {
+  color: #dc2626;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.action-button.save.active {
+  color: #2563eb;
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
 .action-button svg {
   width: 18px;
   height: 18px;
@@ -401,14 +419,27 @@
 }
 
 .load-more-button {
-  color: #2563eb;
-  background: #fff;
-  border: 1px solid #93c5fd;
-  box-shadow: none;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 .load-more-button:hover {
-  background: #dbeafe;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+}
+
+.load-more-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 @media (max-width: 1024px) {
