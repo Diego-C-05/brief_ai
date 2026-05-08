@@ -1,4 +1,6 @@
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { decodeToken, getMe } from '../services/authService'
 
 type FeedSidebarProps = {
   activeItem?: 'feed' | 'tendenze' | 'impostazioni'
@@ -13,6 +15,50 @@ const navigationItems = [
 
 function FeedSidebar({ activeItem = 'feed' }: FeedSidebarProps) {
   const navigate = useNavigate()
+  const [userName, setUserName] = useState('')
+  const [userEmail, setUserEmail] = useState('')
+
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      const token = localStorage.getItem('briefai_token')
+      const payload = token ? decodeToken(token) : null
+
+      if (payload?.email) {
+        setUserEmail(String(payload.email))
+      }
+
+      try {
+        const me = await getMe()
+        const username = me?.user?.username
+        const email = me?.user?.email
+
+        if (username) setUserName(String(username))
+        if (email) setUserEmail(String(email))
+      } catch {
+        // Ignore network/auth errors and keep available fallback values.
+      }
+    }
+
+    void loadCurrentUser()
+  }, [])
+
+  const profileInitials = useMemo(() => {
+    const sourceName = userName.trim()
+    if (sourceName) {
+      const parts = sourceName
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+
+      const initials = parts.map((part) => part[0]).join('')
+      if (initials) return initials.toUpperCase()
+
+      return sourceName.slice(0, 2).toUpperCase()
+    }
+
+    const emailPrefix = userEmail.trim().split('@')[0] ?? ''
+    return emailPrefix.slice(0, 2).toUpperCase() || 'U'
+  }, [userEmail, userName])
 
   return (
     <aside className="feed-sidebar" aria-label="Navigazione principale">
@@ -47,11 +93,11 @@ function FeedSidebar({ activeItem = 'feed' }: FeedSidebarProps) {
       {/* Box profilo: resta agganciato in basso. */}
       <div className="sidebar-profile">
         <div className="profile-avatar" aria-hidden="true">
-          JD
+          {profileInitials}
         </div>
         <div className="profile-meta">
-          <strong>John Doe</strong>
-          <span>john@example.com</span>
+          <strong>{userName || 'Utente'}</strong>
+          <span>{userEmail || ''}</span>
         </div>
       </div>
     </aside>

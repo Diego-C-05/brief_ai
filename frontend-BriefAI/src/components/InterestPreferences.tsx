@@ -2,6 +2,7 @@ type InterestPreferencesProps = {
   selectedMacroTopics: string[]
   onToggleMacroTopic: (topic: string) => void
   onSaveMacroTopics: () => void
+  isSaving?: boolean
 }
 
 type CategoryOption = {
@@ -25,7 +26,7 @@ const macroTopicOptions: CategoryOption[] = [
 ]
 
 // Sezione interessi: gestisce la selezione rapida delle categorie del feed.
-function InterestPreferences({ selectedMacroTopics, onToggleMacroTopic, onSaveMacroTopics }: InterestPreferencesProps) {
+function InterestPreferences({ selectedMacroTopics, onToggleMacroTopic, onSaveMacroTopics, isSaving = false }: InterestPreferencesProps) {
   return (
     <section className="settings-card" aria-label="Le tue categorie">
       <header className="settings-section-header">
@@ -56,7 +57,7 @@ function InterestPreferences({ selectedMacroTopics, onToggleMacroTopic, onSaveMa
       </div>
 
       <div className="settings-action-row">
-        <button type="button" className="settings-save-button" onClick={onSaveMacroTopics}>
+        <button type="button" className={`settings-save-button${isSaving ? ' saving' : ''}`} onClick={onSaveMacroTopics} disabled={isSaving}>
           <SaveIcon />
           Salva
         </button>

@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 
+import { useEffect, useState } from 'react'
+
 type MagicCardProps = {
   articleId?: string
   articleUrl?: string
@@ -20,6 +22,16 @@ type MagicCardProps = {
 
 // Card notizia: mostra fonte, sentiment, testo, tag, entità e azioni rapide.
 function MagicCard({ articleId, articleUrl, source, timeAgo, sentiment, title, summary, tags, entities, voteState, votePending = false, isSaved = false, savePending = false, onVoteChange, onSave }: MagicCardProps) {
+  const [showSaveAnimation, setShowSaveAnimation] = useState(false)
+
+  useEffect(() => {
+    if (savePending) {
+      setShowSaveAnimation(true)
+      const timer = setTimeout(() => setShowSaveAnimation(false), 500)
+      return () => clearTimeout(timer)
+    }
+  }, [savePending])
+
   const handleVote = (clickedVote: 1 | -1) => {
     if (!articleId || votePending) return
 
@@ -101,7 +113,7 @@ function MagicCard({ articleId, articleUrl, source, timeAgo, sentiment, title, s
         >
           <ThumbDownIcon />
         </ActionButton>
-        <ActionButton label="Salva" tone="save" isActive={isSaved} onClick={handleSave} disabled={savePending}>
+        <ActionButton label="Salva" tone="save" isActive={isSaved} onClick={handleSave} disabled={savePending} animating={showSaveAnimation}>
           <BookmarkIcon />
         </ActionButton>
       </footer>
@@ -110,17 +122,23 @@ function MagicCard({ articleId, articleUrl, source, timeAgo, sentiment, title, s
 }
 
 // Piccolo bottone riutilizzabile per mantenere coerente il footer azioni.
-function ActionButton({ label, tone, children, onClick, disabled, isActive, style }: { label: string; tone: string; children: ReactNode; onClick?: () => void; disabled?: boolean; isActive?: boolean; style?: React.CSSProperties }) {
+function ActionButton({ label, tone, children, onClick, disabled, isActive, animating, style }: { label: string; tone: string; children: ReactNode; onClick?: () => void; disabled?: boolean; isActive?: boolean; animating?: boolean; style?: React.CSSProperties }) {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
+    if (disabled) return
+    onClick && onClick()
+  }
+
   return (
     <button
       type="button"
-      className={`action-button ${tone}${isActive ? ' active' : ''}`}
+      className={`action-button ${tone}${isActive ? ' active' : ''}${animating ? ' saving' : ''}`}
       aria-label={label}
-      onClick={onClick}
+      onClick={handleClick}
       disabled={disabled}
       style={style}
     >
-      {children}
+      {disabled ? <span className="spinner" aria-hidden="true" /> : children}
     </button>
   )
 }

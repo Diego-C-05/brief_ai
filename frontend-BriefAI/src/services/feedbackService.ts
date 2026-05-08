@@ -104,3 +104,70 @@ export const saveArticle = async (articleId: string): Promise<void> => {
     clearTimeout(timeoutId)
   }
 }
+
+export const unsaveArticle = async (articleId: string): Promise<void> => {
+  const token = localStorage.getItem('briefai_token')
+  if (!token) {
+    // Fallback local removal
+    const saved = JSON.parse(localStorage.getItem('briefai_saved_articles') || '{}')
+    delete saved[articleId]
+    localStorage.setItem('briefai_saved_articles', JSON.stringify(saved))
+    return
+  }
+
+  if (!N8N) {
+    // Fallback: remove only localmente se n8n non è configurato
+    const saved = JSON.parse(localStorage.getItem('briefai_saved_articles') || '{}')
+    delete saved[articleId]
+    localStorage.setItem('briefai_saved_articles', JSON.stringify(saved))
+    return
+  }
+
+  let payload: { userId?: string } | null = null
+  try {
+    payload = JSON.parse(atob(token.split('.')[1]))
+  } catch {
+    // If token invalid, still try local removal
+    const saved = JSON.parse(localStorage.getItem('briefai_saved_articles') || '{}')
+    delete saved[articleId]
+    localStorage.setItem('briefai_saved_articles', JSON.stringify(saved))
+    return
+  }
+
+  if (!payload?.userId) {
+    const saved = JSON.parse(localStorage.getItem('briefai_saved_articles') || '{}')
+    delete saved[articleId]
+    localStorage.setItem('briefai_saved_articles', JSON.stringify(saved))
+    return
+  }
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), FEEDBACK_TIMEOUT_MS)
+
+  try {
+    const response = await fetch(`${N8N}/briefai/unsave-article`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: payload.userId, articleId }),
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      // Fallback locale se n8n fallisce
+      const saved = JSON.parse(localStorage.getItem('briefai_saved_articles') || '{}')
+      delete saved[articleId]
+      localStorage.setItem('briefai_saved_articles', JSON.stringify(saved))
+      return
+    }
+  } catch (error) {
+    console.error('Unsave article error:', error)
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Timeout unsave article')
+    }
+    const saved = JSON.parse(localStorage.getItem('briefai_saved_articles') || '{}')
+    delete saved[articleId]
+    localStorage.setItem('briefai_saved_articles', JSON.stringify(saved))
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}

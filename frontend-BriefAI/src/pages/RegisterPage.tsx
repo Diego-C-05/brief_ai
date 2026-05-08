@@ -63,8 +63,9 @@ function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
       setNewPassword('')
       setAcceptedTerms(false)
       if (typeof onRegisterSuccess === 'function') onRegisterSuccess()
-      // Dopo la registrazione il token è salvato dal servizio; redirige al feed
-      navigate('/feed')
+      // Dopo la registrazione, redirige all'onboarding per selezionare le macrocategorie
+      localStorage.setItem('briefai-newUser', 'true')
+      navigate('/onboarding')
     } catch (err: any) {
       // Estrae il messaggio d'errore lanciato dal backend (`throw await res.json()`),
       // oppure mostra un fallback se l'API non risponde correttamente.

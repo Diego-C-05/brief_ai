@@ -358,6 +358,10 @@
   display: grid;
   place-items: center;
   transition: color 180ms ease, border-color 180ms ease, background 180ms ease, transform 180ms ease;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
 }
 
 .action-button:hover {
@@ -410,6 +414,33 @@
   width: 18px;
   height: 18px;
   fill: currentColor;
+}
+
+/* Spinner shown when an action is pending */
+.action-button .spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  box-sizing: border-box;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Bounce animation for save button feedback */
+@keyframes saveBounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.action-button.save.saving {
+  animation: saveBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .feed-footer {

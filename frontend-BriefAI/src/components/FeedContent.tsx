@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import MagicCard from './MagicCard'
 import { fetchPersonalizedFeed } from '../services/feedService'
-import { sendFeedback, saveArticle } from '../services/feedbackService'
+import { sendFeedback, saveArticle, unsaveArticle } from '../services/feedbackService'
 import type { Article } from '../types/article'
 
 type FeedContentProps = {
@@ -11,24 +11,67 @@ type FeedContentProps = {
 }
 
 function FeedContent({ sentimentFilter = null, topicsFilter = null, preferenceFilter = null }: FeedContentProps) {
+  // Inizializza lo state direttamente dal localStorage per evitare render vuoto
   const [articles, setArticles] = useState<Article[]>([])
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading')
-  const [voteByArticle, setVoteByArticle] = useState<Record<string, 1 | -1 | null>>({})
+  const [voteByArticle, setVoteByArticle] = useState<Record<string, 1 | -1 | null>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('briefai_voted_articles') || '{}')
+    } catch {
+      return {}
+    }
+  })
   const [pendingByArticle, setPendingByArticle] = useState<Record<string, boolean>>({})
-  const [savedByArticle, setSavedByArticle] = useState<Record<string, boolean>>({})
+  const [savedByArticle, setSavedByArticle] = useState<Record<string, boolean>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('briefai_saved_articles') || '{}')
+    } catch {
+      return {}
+    }
+  })
   const [savePendingByArticle, setSavePendingByArticle] = useState<Record<string, boolean>>({})
   const [voteError, setVoteError] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
 
   // Carica articoli salvati e voti da localStorage
-  useEffect(() => {
+  const loadPreferencesFromLocalStorage = () => {
     try {
       const saved = JSON.parse(localStorage.getItem('briefai_saved_articles') || '{}')
       setSavedByArticle(saved)
       const votes = JSON.parse(localStorage.getItem('briefai_voted_articles') || '{}')
       setVoteByArticle(votes)
+      console.log('[FeedContent] Preferenze caricate da localStorage:', { saved, votes })
     } catch (e) {
       console.warn('Errore caricamento preferenze:', e)
+    }
+  }
+
+  useEffect(() => {
+    // Carica al mount
+    loadPreferencesFromLocalStorage()
+
+    // Sincronizza quando il localStorage cambia (es. da altre tab o quando torni al feed)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'briefai_saved_articles' || e.key === 'briefai_voted_articles') {
+        console.log('[FeedContent] Storage event rilevato:', e.key)
+        loadPreferencesFromLocalStorage()
+      }
+    }
+
+    // Sincronizza quando la pagina diventa visibile (es. dopo aver navigato)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[FeedContent] Pagina diventa visibile, ricaricando preferenze')
+        loadPreferencesFromLocalStorage()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [])
 
@@ -40,6 +83,15 @@ function FeedContent({ sentimentFilter = null, topicsFilter = null, preferenceFi
       console.warn('Errore salvataggio voti:', e)
     }
   }, [voteByArticle])
+
+  // Persisti articoli salvati in localStorage quando cambiano
+  useEffect(() => {
+    try {
+      localStorage.setItem('briefai_saved_articles', JSON.stringify(savedByArticle))
+    } catch (e) {
+      console.warn('Errore salvataggio articoli salvati:', e)
+    }
+  }, [savedByArticle])
 
   const sendVoteDelta = async (articleId: string, previousVote: 1 | -1 | null, nextVote: 1 | -1 | null) => {
     // Without server idempotency, simulate undo by applying compensating vote.
@@ -82,13 +134,30 @@ function FeedContent({ sentimentFilter = null, topicsFilter = null, preferenceFi
     if (savePendingByArticle[articleId]) return
 
     setSaveError(null)
-    setSavedByArticle((prev) => ({ ...prev, [articleId]: !prev[articleId] }))
+    // Toggle locally first and persist immediately to localStorage to avoid losing state on quick navigation
+    const nextSaved = !(savedByArticle[articleId] ?? false)
+    const nextSavedMap = { ...savedByArticle, [articleId]: nextSaved }
+    if (!nextSaved) {
+      // remove key when toggling off
+      delete nextSavedMap[articleId]
+    }
+    setSavedByArticle(nextSavedMap)
+    try {
+      localStorage.setItem('briefai_saved_articles', JSON.stringify(nextSavedMap))
+    } catch (e) {
+      console.warn('Errore persistenza locale immediata:', e)
+    }
     setSavePendingByArticle((prev) => ({ ...prev, [articleId]: true }))
 
     try {
-      await saveArticle(articleId)
+      if (nextSaved) {
+        await saveArticle(articleId)
+      } else {
+        await unsaveArticle(articleId)
+      }
     } catch {
-      setSavedByArticle((prev) => ({ ...prev, [articleId]: !prev[articleId] }))
+      // Revert optimistic update on error
+      setSavedByArticle((prev) => ({ ...prev, [articleId]: !nextSaved }))
       setSaveError('Impossibile salvare l\'articolo. Riprova.')
     } finally {
       setSavePendingByArticle((prev) => ({ ...prev, [articleId]: false }))

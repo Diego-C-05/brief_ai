@@ -72,7 +72,7 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
       </form>
 
       <p className="auth-footer">
-        Non hai un account? <Link className="text-link" to="/onboarding">Registrati</Link>
+        Non hai un account? <Link className="text-link" to="/register">Registrati</Link>
       </p>
 
       <p className="auth-footer">

@@ -84,6 +84,8 @@ function SettingsPage() {
   const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(() =>
     (readInitialSettings() as any).subscriptionExpiresAt ?? null,
   )
+  const [isSavingMacroTopics, setIsSavingMacroTopics] = useState(false)
+  const [isSavingKeywords, setIsSavingKeywords] = useState(false)
 
   useEffect(() => {
     fetchProfile()
@@ -111,18 +113,21 @@ function SettingsPage() {
     )
   }
 
-  const handleSaveMacroTopics = () => {
-    updateProfile({ macroTopics: selectedMacroTopics })
-      .then((res) => {
-        if (res && res.profile) {
-          setSelectedMacroTopics(res.profile.macroTopics || selectedMacroTopics)
-        }
-        persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
-      })
-      .catch(() => {
-        // fallback local persist
-        persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
-      })
+  const handleSaveMacroTopics = async () => {
+    setIsSavingMacroTopics(true)
+    try {
+      const res = await updateProfile({ macroTopics: selectedMacroTopics })
+      if (res && res.profile) {
+        setSelectedMacroTopics(res.profile.macroTopics || selectedMacroTopics)
+      }
+      persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
+    } catch (e) {
+      // fallback local persist
+      persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
+    } finally {
+      // Animazione dura 0.5s, poi reset
+      setTimeout(() => setIsSavingMacroTopics(false), 500)
+    }
   }
 
   const handleAddKeyword = (rawKeyword: string) => {
@@ -143,17 +148,20 @@ function SettingsPage() {
     )
   }
 
-  const handleSaveKeywords = () => {
-    updateProfile({ keywords })
-      .then((res) => {
-        if (res && res.profile) {
-          setKeywords(res.profile.keywords || keywords)
-        }
-        persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
-      })
-      .catch(() => {
-        persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
-      })
+  const handleSaveKeywords = async () => {
+    setIsSavingKeywords(true)
+    try {
+      const res = await updateProfile({ keywords })
+      if (res && res.profile) {
+        setKeywords(res.profile.keywords || keywords)
+      }
+      persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
+    } catch (e) {
+      persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
+    } finally {
+      // Animazione dura 0.5s, poi reset
+      setTimeout(() => setIsSavingKeywords(false), 500)
+    }
   }
 
   const handleUpgrade = async () => {
@@ -210,8 +218,8 @@ function SettingsPage() {
                 selectedMacroTopics={selectedMacroTopics}
                 onToggleMacroTopic={handleToggleMacroTopic}
                 onSaveMacroTopics={handleSaveMacroTopics}
+                isSaving={isSavingMacroTopics}
               />
-
               <TrackedKeywords
                 keywords={keywords}
                 keywordInput={keywordInput}
@@ -219,6 +227,7 @@ function SettingsPage() {
                 onAddKeyword={handleAddKeyword}
                 onRemoveKeyword={handleRemoveKeyword}
                 onSaveKeywords={handleSaveKeywords}
+                isSaving={isSavingKeywords}
               />
             </div>
           ) : (

@@ -3,7 +3,7 @@ import FeedTopbar from '../components/FeedTopbar'
 import './FeedPage.css'
 import './TrendsPage.css'
 import { useEffect, useState } from 'react'
-import { fetchTrendingTopics, fetchSentimentStats } from '../services/apiService'
+import { fetchTrendingTopics } from '../services/apiService'
 
 type Sentiment = 'Positive' | 'Negative' | 'Neutral'
 
@@ -121,7 +121,6 @@ function getProgressClass(rank: number) {
 
 function TrendsPage() {
   const [topics, setTopics] = useState<TrendingTopic[]>(defaultTrendingTopics)
-  const [sentimentOverview, setSentimentOverview] = useState<any>(null)
 
   useEffect(() => {
     fetchTrendingTopics()
@@ -130,9 +129,7 @@ function TrendsPage() {
       })
       .catch(() => {})
 
-    fetchSentimentStats()
-      .then((data) => setSentimentOverview(data))
-      .catch(() => {})
+    // Sentiment stats currently unused in UI; skip fetching to avoid unused variable warnings
   }, [])
 
   return (
