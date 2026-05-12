@@ -209,9 +209,6 @@ function FeedContent({ sentimentFilter = null, topicsFilter = null, preferenceFi
 
             const matchesPreference = (a: Article) => {
               if (!preferenceFilter || preferenceFilter === 'Tutti') return true
-              if (preferenceFilter === 'Like') {
-                return voteByArticle[a.uniqueKey] === 1
-              }
               if (preferenceFilter === 'Salvati') {
                 return savedByArticle[a.uniqueKey] === true
               }
@@ -273,11 +270,6 @@ function FeedContent({ sentimentFilter = null, topicsFilter = null, preferenceFi
         </>
       )}
 
-      <div className="feed-footer">
-        <button type="button" className="load-more-button">
-          Carica altre notizie
-        </button>
-      </div>
     </section>
   )
 }

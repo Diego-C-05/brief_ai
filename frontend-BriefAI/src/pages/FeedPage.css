@@ -443,36 +443,6 @@
   animation: saveBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.feed-footer {
-  display: flex;
-  justify-content: center;
-  padding: 32px 0 8px;
-}
-
-.load-more-button {
-  padding: 12px 28px;
-  border: none;
-  border-radius: 12px;
-  color: #fff;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-}
-
-.load-more-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-}
-
-.load-more-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-}
-
 @media (max-width: 1024px) {
   .feed-layout {
     grid-template-columns: 1fr;

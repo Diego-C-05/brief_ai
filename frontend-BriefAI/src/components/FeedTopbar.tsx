@@ -69,7 +69,6 @@ function FeedTopbar({
               onChange={(e) => onPreferenceChange?.(e.target.value)}
             >
               <option>Tutti</option>
-              <option>Like</option>
               <option>Salvati</option>
             </select>
           </label>
