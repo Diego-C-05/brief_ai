@@ -21,6 +21,8 @@ const SUGGESTIONS = ['OpenAI', 'Google AI', 'Anthropic', 'Tesla', 'SpaceX'] as c
 
 function OnboardingPage() {
   const navigate = useNavigate()
+  // Verifica se siamo in onboarding post-registrazione
+  const isNewUser = localStorage.getItem('briefai-newUser') === 'true'
   // Step corrente del wizard: 1 per categorie, 2 per tracking keyword.
   const [step, setStep] = useState<1 | 2>(1)
   // Stato accumulato dello step 1 (interessi selezionati).
@@ -71,13 +73,20 @@ function OnboardingPage() {
       return
     }
 
-    // Salvataggio demo in localStorage: simula la persistenza prima del redirect
-    // verso il form di registrazione. Nessuna chiamata al backend qui.
+    // Salvataggio demo in localStorage: simula la persistenza prima del redirect.
     localStorage.setItem(
       'briefai-onboarding',
       JSON.stringify({ selectedTopics, keywords }),
     )
-    // Dopo il wizard, mostra il form di registrazione (pre-auth flow).
+    
+    // Se è un new user (post-registrazione), redirige al feed
+    if (isNewUser) {
+      localStorage.removeItem('briefai-newUser')
+      navigate('/feed')
+      return
+    }
+    
+    // Altrimenti, mostra il form di registrazione (pre-auth flow).
     navigate('/register')
   }
 

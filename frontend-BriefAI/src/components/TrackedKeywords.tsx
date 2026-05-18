@@ -5,6 +5,7 @@ type TrackedKeywordsProps = {
   onAddKeyword: (keyword: string) => void
   onRemoveKeyword: (keyword: string) => void
   onSaveKeywords: () => void
+  isSaving?: boolean
 }
 
 const keywordSuggestions = ['OpenAI', 'Google AI', 'Anthropic', 'Tesla', 'SpaceX']
@@ -17,6 +18,7 @@ function TrackedKeywords({
   onAddKeyword,
   onRemoveKeyword,
   onSaveKeywords,
+  isSaving = false,
 }: TrackedKeywordsProps) {
   const handleSubmit = () => {
     onAddKeyword(keywordInput)
@@ -84,7 +86,7 @@ function TrackedKeywords({
       )}
 
       <div className="settings-action-row">
-        <button type="button" className="settings-save-button" onClick={onSaveKeywords}>
+        <button type="button" className={`settings-save-button${isSaving ? ' saving' : ''}`} onClick={onSaveKeywords} disabled={isSaving}>
           <SaveIcon />
           Salva
         </button>

@@ -7,6 +7,7 @@ import './FeedPage.css'
 function FeedPage() {
   const [sentimentFilter, setSentimentFilter] = useState<string | null>(null)
   const [topicsFilter, setTopicsFilter] = useState<string | null>(null)
+  const [preferenceFilter, setPreferenceFilter] = useState<string | null>(null)
 
   const handleSentimentChange = (sentiment: string) => {
     setSentimentFilter(sentiment === 'All Sentiment' ? null : sentiment)
@@ -14,6 +15,10 @@ function FeedPage() {
 
   const handleTopicChange = (topic: string) => {
     setTopicsFilter(topic === 'All Topics' ? null : topic)
+  }
+
+  const handlePreferenceChange = (preference: string) => {
+    setPreferenceFilter(preference === 'Tutti' ? null : preference)
   }
 
   return (
@@ -27,8 +32,10 @@ function FeedPage() {
           onSentimentChange={handleSentimentChange}
           topicsFilter={topicsFilter}
           onTopicChange={handleTopicChange}
+          preferenceFilter={preferenceFilter}
+          onPreferenceChange={handlePreferenceChange}
         />
-        <FeedContent sentimentFilter={sentimentFilter} topicsFilter={topicsFilter} />
+        <FeedContent sentimentFilter={sentimentFilter} topicsFilter={topicsFilter} preferenceFilter={preferenceFilter} />
       </section>
     </div>
   )

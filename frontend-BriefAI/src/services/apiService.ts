@@ -9,6 +9,8 @@ export type ProfileResponse = {
     email?: string
     macroTopics?: string[]
     keywords?: string[]
+    subscriptionPlan?: 'free' | 'pro'
+    subscriptionExpiresAt?: string | null
   }
 }
 
@@ -22,9 +24,8 @@ const authFetch = (path: string, options: RequestInit = {}) =>
 export const fetchSentimentStats = () =>
   authFetch('/api/stats/sentiment').then((r) => r.json())
 
-// GET /api/stats/trending
-export const fetchTrendingTopics = () =>
-  authFetch('/api/stats/trending').then((r) => r.json())
+// NOTE: trending endpoint used only by the removed TrendsPage and has been
+// removed from client exports.
 
 // GET /api/stats/categories
 export const fetchCategoryStats = () =>
@@ -47,6 +48,7 @@ export const updateProfile = async (data: {
   userId?: string
   macroTopics?: string[]
   keywords?: string[]
+  subscriptionState?: 'free' | 'pro'
 }) => {
   // Sync to backend
   const backendRes = await authFetch('/api/profile', {
@@ -57,7 +59,7 @@ export const updateProfile = async (data: {
 
   // Opt-in sync to n8n if url is present and userId is known
   const n8nUrl = import.meta.env.VITE_N8N_URL;
-  if (n8nUrl && data.userId && data.macroTopics) {
+  if (n8nUrl && data.userId) {
     try {
       await fetch(`${n8nUrl}/briefai/profile/update`, {
         method: 'POST',
@@ -66,6 +68,7 @@ export const updateProfile = async (data: {
           userId: data.userId,
           macroTopics: data.macroTopics,
           keywords: data.keywords,
+          subscriptionState: data.subscriptionState,
         })
       });
     } catch (e) {

@@ -37,11 +37,38 @@ router.get('/', auth, async (req, res) => {
       .skip((parsedPage - 1) * parsedLimit)
       .select('-__v'); // campo automatico di mongoose da evitare
 
+<<<<<<< HEAD
     const total = await Article.countDocuments(filter); // per impaginazione frontend
+=======
+    // Helper to strip anchor tags and plain URLs from text fields
+    const stripLinks = (text) => {
+      if (!text || typeof text !== 'string') return text;
+      // remove HTML anchor tags but keep inner text
+      let s = text.replace(/<a[^>]*>(.*?)<\/a>/gi, '$1');
+      // remove markdown links [text](url) -> keep text
+      s = s.replace(/\[([^\]]+)\]\((?:[^)]+)\)/g, '$1');
+      // remove plain URLs
+      s = s.replace(/https?:\/\/[^\s\"'<>]+/gi, '');
+      return s;
+    };
+
+    // For processed articles, strip links from `content` and `summary`
+    const sanitizedArticles = articles.map((a) => {
+      if (a.status === 'processed') {
+        const doc = a.toObject ? a.toObject() : a;
+        doc.content = stripLinks(doc.content);
+        doc.summary = stripLinks(doc.summary);
+        return doc;
+      }
+      return a;
+    });
+
+    const total = await Article.countDocuments(filter);
+>>>>>>> problem-solving
 
     return res.json({
       success: true,
-      articles,
+      articles: sanitizedArticles,
       total,
       page: parsedPage,
       limit: parsedLimit,

@@ -4,13 +4,15 @@ type AccountSettingsProps = {
   username: string
   email: string
   subscriptionState: SubscriptionState
+  subscriptionExpiresAt?: string | null
   onUpgrade: () => void
   onCancelSubscription: () => void
 }
 
 // Sezione account: mostra profilo e gestisce in modo condizionale il piano attivo.
-function AccountSettings({username, email, subscriptionState, onUpgrade, onCancelSubscription}: AccountSettingsProps) {
+function AccountSettings({username, email, subscriptionState, subscriptionExpiresAt, onUpgrade, onCancelSubscription}: AccountSettingsProps) {
   const isProPlan = subscriptionState === 'pro'
+  const expires = subscriptionExpiresAt ? new Date(subscriptionExpiresAt) : null
 
   return (
     <section className="settings-stack" aria-label="Profilo">
@@ -48,7 +50,7 @@ function AccountSettings({username, email, subscriptionState, onUpgrade, onCance
               {isProPlan ? 'Piano Pro' : 'Piano Gratuito'}
             </span>
             {isProPlan ? (
-              <p>Scade il 12/12/2026</p>
+              <p>{expires ? `Scade il ${expires.toLocaleDateString()}` : 'Piano Pro attivo'}</p>
             ) : (
               <p>Passa al Pro per sbloccare monitoraggio e analisi avanzate.</p>
             )}
