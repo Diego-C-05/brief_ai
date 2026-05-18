@@ -35,9 +35,9 @@ router.get('/', auth, async (req, res) => {
       .sort({ pubDate: -1 })
       .limit(parsedLimit)
       .skip((parsedPage - 1) * parsedLimit)
-      .select('-__v');
+      .select('-__v'); // campo automatico di mongoose da evitare
 
-    const total = await Article.countDocuments(filter);
+    const total = await Article.countDocuments(filter); // per impaginazione frontend
 
     return res.json({
       success: true,
@@ -56,7 +56,7 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-router.get('/:uniqueKey', auth, async (req, res) => {
+router.get('/:uniqueKey', auth, async (req, res) => { // funzione esistente ma non usata quindi inutile
   try {
     const article = await Article.findOne({ uniqueKey: req.params.uniqueKey });
 

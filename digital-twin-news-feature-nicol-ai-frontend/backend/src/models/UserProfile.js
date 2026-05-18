@@ -13,7 +13,7 @@ const userProfileSchema = new mongoose.Schema(
         social: 1.0,
         'news-it': 1.0,
         general: 1.0,
-      },
+      },//in user uso ma e qui object forse inutile
     },
     preferredSources: { type: [String], default: [] },
     lastFeedGeneratedAt: Date,

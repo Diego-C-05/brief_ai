@@ -16,7 +16,7 @@ router.get('/', auth, async (req, res) => {
       });
     }
 
-    // Read associated UserProfile (may be created/updated by n8n)
+    // Read associated UserProfile (may be created/updated by n8n) verifica se n8n workflow 3 e 4 funzionano
     const userProfile = await UserProfile.findOne({ userId: user.userId }).lean();
 
     // Convert weights map (from User model) to plain object

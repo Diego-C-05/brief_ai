@@ -17,7 +17,7 @@ app.use(helmet());
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',')
   : process.env.NODE_ENV === 'production'
-    ? [process.env.FRONTEND_URL || 'https://your-production-domain.com']
+    ? [process.env.FRONTEND_URL || 'https://your-production-domain.com']//placeholder inutile
     : ['http://localhost:5173'];
 
 app.use(
@@ -26,7 +26,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error('Not allowed by CORS'));
     },
-    credentials: true,
+    credentials: true,//probabilmente inutile
   })
 );
 app.use(morgan('dev'));
@@ -43,7 +43,7 @@ app.get('/health', (req, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     service: 'BriefAI Backend',
-    version: '1.0.0',
+    version: '1.0.0',//togli
   });
 });
 
@@ -60,7 +60,7 @@ app.use((err, req, res, next) => {
     success: false,
     error: process.env.NODE_ENV === 'production' ? 'Errore interno del server.' : err.message,
   });
-  if (typeof next === 'function') {
+  if (typeof next === 'function') {//rischiosa
     return next(err);
   }
   return undefined;

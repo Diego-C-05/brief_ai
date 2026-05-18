@@ -11,8 +11,6 @@ router.post('/register', async (req, res) => {
   try {
     const { email, password, username } = req.body;
 
-    // Support payloads that send preferences nested under `preferences` (frontend)
-    // or as top-level fields for backwards compatibility.
     const pref = req.body && req.body.preferences ? req.body.preferences : {}
     const rawMacroTopics = Array.isArray(pref.macroTopics) ? pref.macroTopics : req.body.macroTopics
     const rawKeywords = Array.isArray(pref.keywords) ? pref.keywords : req.body.keywords
