@@ -8,7 +8,6 @@ import LoginPage from './pages/LoginPage'
 import OnboardingPage from './pages/OnboardingPage'
 import RegisterPage from './pages/RegisterPage'
 import SettingsPage from './pages/SettingsPage'
-import TrendsPage from './pages/TrendsPage'
 
 function App() {
   // Stato minimo di autenticazione usato per abilitare/bloccare le route private.
@@ -39,14 +38,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/tendenze"
-          element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <TrendsPage />
-            </ProtectedRoute>
-          }
-        />
+        {/* Tendenze page rimossa */}
         <Route
           path="/impostazioni"
           element={

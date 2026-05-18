@@ -196,6 +196,7 @@
   margin: 0 auto;
   padding: 32px 24px 48px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .feed-header {
@@ -232,6 +233,8 @@
   padding: 20px;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .magic-card:hover {
@@ -281,6 +284,8 @@
   line-height: 1.2;
   color: #111827;
   transition: color 180ms ease;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .magic-card-title-link {
@@ -301,6 +306,8 @@
 .magic-card-summary {
   line-height: 1.7;
   color: #475569;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .magic-card-tags,
@@ -321,6 +328,10 @@
   background: #dbeafe;
   font-size: 13px;
   font-weight: 600;
+  max-width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .entities-label {
@@ -339,6 +350,10 @@
   background: #f5f3ff;
   font-size: 13px;
   font-weight: 600;
+  max-width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .magic-card-actions {

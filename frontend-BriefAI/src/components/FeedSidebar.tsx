@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { decodeToken, getMe } from '../services/authService'
 
 type FeedSidebarProps = {
-  activeItem?: 'feed' | 'tendenze' | 'impostazioni'
+  activeItem?: 'feed' | 'impostazioni'
 }
 
 // Sidebar principale del feed: gestisce brand, navigazione e blocco profilo.
 const navigationItems = [
   { id: 'feed', label: 'Notizie', icon: LayoutDashboardIcon },
-  { id: 'tendenze', label: 'Tendenze', icon: TrendingUpIcon },
   { id: 'impostazioni', label: 'Impostazioni', icon: SettingsIcon },
 ] as const
 
@@ -119,14 +118,6 @@ function LayoutDashboardIcon() {
   )
 }
 
-function TrendingUpIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 17l6-6 4 4 8-8" />
-      <path d="M14 7h7v7" />
-    </svg>
-  )
-}
 
 function SettingsIcon() {
   return (
