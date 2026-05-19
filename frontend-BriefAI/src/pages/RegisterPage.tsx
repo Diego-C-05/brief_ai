@@ -39,6 +39,13 @@ function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
       // ignore parsing errors
     }
 
+    // Se non ha fatto onboarding, redirige
+    if (!macroTopics || macroTopics.length === 0) {
+      setError('Devi prima completare la selezione delle categorie di interesse.')
+      navigate('/onboarding')
+      return
+    }
+
     // Basic email format validation on client
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(String(email).toLowerCase())) {
