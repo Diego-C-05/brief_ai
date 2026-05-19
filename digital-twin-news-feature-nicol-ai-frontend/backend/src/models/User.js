@@ -17,14 +17,15 @@ const userSchema = new mongoose.Schema(
     weights: {
       type: Map,
       of: Number,
-      default: () =>
-        new Map([
-          ['tech', 1.0],
-          ['news', 1.0],
-          ['social', 1.0],
-          ['news-it', 1.0],
-          ['general', 1.0],
-        ]),
+      default: () => {
+        const MACRO_TOPICS = [
+          'Intelligenza Artificiale', 'Cybersecurity', 'Business & Finanza',
+          'Politica & Geopolitica', 'Startup & Innovazione', 'Software & Sviluppo',
+          'Scienza & Ricerca', 'Energia & Ambiente', 'Economia & Mercati',
+          'Social Media & Cultura', 'Salute & Medicina', 'Trasporti & Mobilità'
+        ];
+        return new Map(MACRO_TOPICS.map(t => [t, 1.0]));
+      }
     },
 
 

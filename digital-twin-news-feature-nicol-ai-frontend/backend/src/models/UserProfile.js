@@ -8,12 +8,19 @@ const userProfileSchema = new mongoose.Schema(
     weights: {
       type: Object,
       default: {
-        tech: 1.0,
-        news: 1.0,
-        social: 1.0,
-        'news-it': 1.0,
-        general: 1.0,
-      },//in user uso ma e qui object forse inutile
+        'Intelligenza Artificiale': 1.0,
+        'Cybersecurity': 1.0,
+        'Business & Finanza': 1.0,
+        'Politica & Geopolitica': 1.0,
+        'Startup & Innovazione': 1.0,
+        'Software & Sviluppo': 1.0,
+        'Scienza & Ricerca': 1.0,
+        'Energia & Ambiente': 1.0,
+        'Economia & Mercati': 1.0,
+        'Social Media & Cultura': 1.0,
+        'Salute & Medicina': 1.0,
+        'Trasporti & Mobilità': 1.0,
+      }
     },
     preferredSources: { type: [String], default: [] },
     subscriptionPlan: { type: String, enum: ['free', 'pro'], default: 'free' },
