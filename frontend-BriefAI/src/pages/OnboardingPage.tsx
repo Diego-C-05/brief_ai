@@ -25,10 +25,40 @@ function OnboardingPage() {
   const isNewUser = localStorage.getItem('briefai-newUser') === 'true'
   // Step corrente del wizard: 1 per categorie, 2 per tracking keyword.
   const [step, setStep] = useState<1 | 2>(1)
+
+  // Se è un new user, carica i dati che ha appena registrato
+  const getInitialTopics = () => {
+    if (!isNewUser) return []
+    try {
+      const raw = localStorage.getItem('briefai-onboarding')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        return parsed.selectedTopics || []
+      }
+    } catch {
+      // ignore
+    }
+    return []
+  }
+
+  const getInitialKeywords = () => {
+    if (!isNewUser) return []
+    try {
+      const raw = localStorage.getItem('briefai-onboarding')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        return parsed.keywords || []
+      }
+    } catch {
+      // ignore
+    }
+    return []
+  }
+
   // Stato accumulato dello step 1 (interessi selezionati).
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([])
+  const [selectedTopics, setSelectedTopics] = useState<string[]>(getInitialTopics)
   // Stato accumulato dello step 2 (keyword da monitorare).
-  const [keywords, setKeywords] = useState<string[]>([])
+  const [keywords, setKeywords] = useState<string[]>(getInitialKeywords)
   const [keywordInput, setKeywordInput] = useState('')
 
   const progressPercent = step === 1 ? 50 : 100
@@ -78,14 +108,15 @@ function OnboardingPage() {
       'briefai-onboarding',
       JSON.stringify({ selectedTopics, keywords }),
     )
-    
-    // Se è un new user (post-registrazione), redirige al feed
+
+    // Se è un new user (post-registrazione), redirige al feed e pulisce il localStorage
     if (isNewUser) {
       localStorage.removeItem('briefai-newUser')
+      localStorage.removeItem('briefai-onboarding')
       navigate('/feed')
       return
     }
-    
+
     // Altrimenti, mostra il form di registrazione (pre-auth flow).
     navigate('/register')
   }
