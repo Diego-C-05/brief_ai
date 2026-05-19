@@ -1,5 +1,5 @@
 import type { FormEvent } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { register } from '../services/authService'
 import './RegisterPage.css'
@@ -15,6 +15,22 @@ function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
   const [newPassword, setNewPassword] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('briefai-register-draft')
+      if (saved) {
+        const { username: u, email: e, password: p, terms: t } = JSON.parse(saved)
+        setUsername(u || '')
+        setEmail(e || '')
+        setNewPassword(p || '')
+        setAcceptedTerms(t || false)
+        localStorage.removeItem('briefai-register-draft')
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -39,9 +55,14 @@ function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
       // ignore parsing errors
     }
 
-    // Se non ha fatto onboarding, redirige
+    // Se non ha fatto onboarding, salva il form e redirige a onboarding
     if (!macroTopics || macroTopics.length === 0) {
-      setError('Devi prima completare la selezione delle categorie di interesse.')
+      localStorage.setItem('briefai-register-draft', JSON.stringify({
+        username,
+        email,
+        password: newPassword,
+        terms: acceptedTerms,
+      }))
       navigate('/onboarding')
       return
     }
@@ -70,10 +91,9 @@ function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
       setNewPassword('')
       setAcceptedTerms(false)
       localStorage.removeItem('briefai-onboarding')
+      localStorage.removeItem('briefai-newUser')
       if (typeof onRegisterSuccess === 'function') onRegisterSuccess()
-      // Dopo la registrazione, redirige all'onboarding per selezionare le macrocategorie
-      localStorage.setItem('briefai-newUser', 'true')
-      navigate('/onboarding')
+      window.location.href = '/feed'
     } catch (err: any) {
       // Estrae il messaggio d'errore lanciato dal backend (`throw await res.json()`),
       // oppure mostra un fallback se l'API non risponde correttamente.

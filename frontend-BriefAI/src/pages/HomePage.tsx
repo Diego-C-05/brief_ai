@@ -32,7 +32,7 @@ function HomePage() {
                 <Link to="/login" className="plan-login-button">
                   Login
                 </Link>
-                <Link to="/register" className="plan-register-button">
+                <Link to="/onboarding" className="plan-register-button">
                   Registrati
                 </Link>
               </div>
@@ -49,7 +49,7 @@ function HomePage() {
                 <Link to="/login" className="plan-login-button">
                   Login
                 </Link>
-                <Link to="/register" className="plan-register-button">
+                <Link to="/onboarding" className="plan-register-button">
                   Registrati
                 </Link>
               </div>
