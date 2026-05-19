@@ -37,9 +37,6 @@ router.get('/', auth, async (req, res) => {
       .skip((parsedPage - 1) * parsedLimit)
       .select('-__v'); // campo automatico di mongoose da evitare
 
-<<<<<<< HEAD
-    const total = await Article.countDocuments(filter); // per impaginazione frontend
-=======
     // Helper to strip anchor tags and plain URLs from text fields
     const stripLinks = (text) => {
       if (!text || typeof text !== 'string') return text;
@@ -64,7 +61,6 @@ router.get('/', auth, async (req, res) => {
     });
 
     const total = await Article.countDocuments(filter);
->>>>>>> problem-solving
 
     return res.json({
       success: true,
