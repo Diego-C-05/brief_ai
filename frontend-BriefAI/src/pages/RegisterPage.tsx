@@ -62,6 +62,7 @@ function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
       setEmail('')
       setNewPassword('')
       setAcceptedTerms(false)
+      localStorage.removeItem('briefai-onboarding')
       if (typeof onRegisterSuccess === 'function') onRegisterSuccess()
       // Dopo la registrazione, redirige all'onboarding per selezionare le macrocategorie
       localStorage.setItem('briefai-newUser', 'true')
