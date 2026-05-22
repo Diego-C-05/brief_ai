@@ -16,7 +16,7 @@ export const fetchPersonalizedFeed = async (): Promise<Article[]> => {
     try {
       const me = await getMe()
       userId = me?.user?.userId
-    } catch (e) {
+    } catch {
       // ignore and let later check throw
     }
   }
@@ -37,10 +37,30 @@ export const fetchPersonalizedFeed = async (): Promise<Article[]> => {
   }
   const data = await res.json()
   console.log('[FeedService] Response:', data)
-  const articles = (data.articles ?? []).map((a: any) => {
-    const idVal = a.uniqueKey ?? a.id ?? a._id ?? ''
-    const uniqueKey = typeof idVal === 'object' ? String(idVal) : idVal
-    return { ...a, uniqueKey }
+  const articles = (data.articles ?? []).map((a: unknown) => {
+    const item = a as Record<string, unknown>
+    const idVal = item.uniqueKey ?? item.id ?? item._id ?? ''
+    const uniqueKey = typeof idVal === 'object' ? String(idVal) : String(idVal ?? '')
+
+    const title = String(item.title ?? '')
+    const url = String(item.url ?? '')
+    const pubDate = String(item.pubDate ?? '')
+    const source = String(item.source ?? '')
+    const category = String(item.category ?? '')
+    const summary = String(item.summary ?? '')
+    const sentimentRaw = item.sentiment as unknown
+    const sentiment =
+      sentimentRaw === 'Positive' || sentimentRaw === 'Negative' || sentimentRaw === 'Neutral'
+        ? (sentimentRaw as 'Positive' | 'Negative' | 'Neutral')
+        : 'Neutral'
+    const entities = Array.isArray(item.entities) ? (item.entities as unknown[]).map(String) : []
+    const trendingTopics = Array.isArray(item.trendingTopics)
+      ? (item.trendingTopics as unknown[]).map(String)
+      : []
+    const macroTopics = Array.isArray(item.macroTopics) ? (item.macroTopics as unknown[]).map(String) : undefined
+    const score = typeof item.score === 'number' ? item.score : undefined
+
+    return { uniqueKey, title, url, pubDate, source, category, summary, sentiment, entities, trendingTopics, macroTopics, score }
   })
   return articles
 }

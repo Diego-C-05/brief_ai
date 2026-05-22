@@ -33,28 +33,55 @@ function FeedContent({ sentimentFilter = null, topicsFilter = null, preferenceFi
   const [voteError, setVoteError] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  // Carica articoli salvati e voti da localStorage
-  const loadPreferencesFromLocalStorage = () => {
+  // Lettura pura delle preferenze dal localStorage (non fa setState)
+  const readPreferencesFromLocalStorage = () => {
     try {
       const saved = JSON.parse(localStorage.getItem('briefai_saved_articles') || '{}')
-      setSavedByArticle(saved)
       const votes = JSON.parse(localStorage.getItem('briefai_voted_articles') || '{}')
-      setVoteByArticle(votes)
-      console.log('[FeedContent] Preferenze caricate da localStorage:', { saved, votes })
+      return { saved, votes }
     } catch (e) {
-      console.warn('Errore caricamento preferenze:', e)
+      console.warn('Errore lettura preferenze da localStorage:', e)
+      return { saved: {}, votes: {} }
     }
   }
 
   useEffect(() => {
-    // Carica al mount
-    loadPreferencesFromLocalStorage()
+    // Nota: non eseguiamo setState sincroni al mount (evitiamo cascading renders).
+    // Manteniamo invece i listener che risincronizzano le preferenze solo se cambiano.
+
+    const resyncPreferencesIfChanged = () => {
+      try {
+        const { saved, votes } = readPreferencesFromLocalStorage()
+
+        setSavedByArticle((prev) => {
+          try {
+            if (JSON.stringify(prev) === JSON.stringify(saved)) return prev
+          } catch {
+            // fallback: continue and replace
+          }
+          console.log('[FeedContent] Aggiornando savedByArticle da storage')
+          return saved
+        })
+
+        setVoteByArticle((prev) => {
+          try {
+            if (JSON.stringify(prev) === JSON.stringify(votes)) return prev
+          } catch {
+            // fallback: continue and replace
+          }
+          console.log('[FeedContent] Aggiornando voteByArticle da storage')
+          return votes
+        })
+      } catch (e) {
+        console.warn('[FeedContent] Errore durante resyncPreferencesIfChanged:', e)
+      }
+    }
 
     // Sincronizza quando il localStorage cambia (es. da altre tab o quando torni al feed)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'briefai_saved_articles' || e.key === 'briefai_voted_articles') {
+      if (e.key === 'briefai_saved_articles' || e.key === 'briefai_voted_articles' || e.key === null) {
         console.log('[FeedContent] Storage event rilevato:', e.key)
-        loadPreferencesFromLocalStorage()
+        resyncPreferencesIfChanged()
       }
     }
 
@@ -62,7 +89,7 @@ function FeedContent({ sentimentFilter = null, topicsFilter = null, preferenceFi
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         console.log('[FeedContent] Pagina diventa visibile, ricaricando preferenze')
-        loadPreferencesFromLocalStorage()
+        resyncPreferencesIfChanged()
       }
     }
 

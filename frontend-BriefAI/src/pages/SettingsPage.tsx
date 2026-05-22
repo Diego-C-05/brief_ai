@@ -82,7 +82,7 @@ function SettingsPage() {
     () => readInitialSettings().subscriptionState,
   )
   const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(() =>
-    (readInitialSettings() as any).subscriptionExpiresAt ?? null,
+    readInitialSettings().subscriptionExpiresAt ?? null,
   )
   const [isSavingMacroTopics, setIsSavingMacroTopics] = useState(false)
   const [isSavingKeywords, setIsSavingKeywords] = useState(false)
@@ -121,7 +121,7 @@ function SettingsPage() {
         setSelectedMacroTopics(res.profile.macroTopics || selectedMacroTopics)
       }
       persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
-    } catch (e) {
+    } catch {
       // fallback local persist
       persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
     } finally {
@@ -156,7 +156,7 @@ function SettingsPage() {
         setKeywords(res.profile.keywords || keywords)
       }
       persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
-    } catch (e) {
+    } catch {
       persistSettings({ selectedMacroTopics, keywords, subscriptionState, subscriptionExpiresAt })
     } finally {
       // Animazione dura 0.5s, poi reset
@@ -172,7 +172,7 @@ function SettingsPage() {
         setSubscriptionExpiresAt(res.profile.subscriptionExpiresAt || null)
         persistSettings({ selectedMacroTopics, keywords, subscriptionState: (res.profile.subscriptionPlan as SubscriptionState) || 'pro', subscriptionExpiresAt: res.profile.subscriptionExpiresAt || null })
       }
-    } catch (e) {
+    } catch {
       // fallback local only
       const nextSubscriptionState: SubscriptionState = 'pro'
       setSubscriptionState(nextSubscriptionState)
@@ -189,7 +189,7 @@ function SettingsPage() {
         setSubscriptionExpiresAt(res.profile.subscriptionExpiresAt || null)
         persistSettings({ selectedMacroTopics, keywords, subscriptionState: (res.profile.subscriptionPlan as SubscriptionState) || 'free', subscriptionExpiresAt: res.profile.subscriptionExpiresAt || null })
       }
-    } catch (e) {
+    } catch {
       const nextSubscriptionState: SubscriptionState = 'free'
       setSubscriptionState(nextSubscriptionState)
       setSubscriptionExpiresAt(null)

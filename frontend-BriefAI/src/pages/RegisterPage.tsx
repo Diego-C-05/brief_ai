@@ -10,23 +10,33 @@ type RegisterPageProps = {
 
 function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
   const navigate = useNavigate()
-  const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const getDraft = () => {
+    try {
+      const saved = localStorage.getItem('briefai-register-draft')
+      if (!saved) return { username: '', email: '', password: '', terms: false }
+      const parsed = JSON.parse(saved)
+      return {
+        username: parsed.username || '',
+        email: parsed.email || '',
+        password: parsed.password || '',
+        terms: parsed.terms || false,
+      }
+    } catch {
+      return { username: '', email: '', password: '', terms: false }
+    }
+  }
+
+  const draft = getDraft()
+  const [username, setUsername] = useState(draft.username)
+  const [email, setEmail] = useState(draft.email)
+  const [newPassword, setNewPassword] = useState(draft.password)
+  const [acceptedTerms, setAcceptedTerms] = useState<boolean>(draft.terms)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    // Remove draft after we've read it during initialization
     try {
-      const saved = localStorage.getItem('briefai-register-draft')
-      if (saved) {
-        const { username: u, email: e, password: p, terms: t } = JSON.parse(saved)
-        setUsername(u || '')
-        setEmail(e || '')
-        setNewPassword(p || '')
-        setAcceptedTerms(t || false)
-        localStorage.removeItem('briefai-register-draft')
-      }
+      localStorage.removeItem('briefai-register-draft')
     } catch {
       // ignore
     }
@@ -51,7 +61,7 @@ function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
         macroTopics = parsed.selectedTopics || undefined
         keywords = parsed.keywords || undefined
       }
-    } catch (e) {
+    } catch {
       // ignore parsing errors
     }
 
@@ -94,10 +104,17 @@ function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
       localStorage.removeItem('briefai-newUser')
       if (typeof onRegisterSuccess === 'function') onRegisterSuccess()
       window.location.href = '/feed'
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Estrae il messaggio d'errore lanciato dal backend (`throw await res.json()`),
       // oppure mostra un fallback se l'API non risponde correttamente.
-      const errorMessage = err?.error || err?.message || 'Errore nella registrazione'
+      let errorMessage = 'Errore nella registrazione'
+      if (typeof err === 'string') {
+        errorMessage = err
+      } else if (err && typeof err === 'object') {
+        const maybe = err as Record<string, unknown>
+        if (typeof maybe.error === 'string') errorMessage = maybe.error
+        else if (typeof maybe.message === 'string') errorMessage = maybe.message
+      }
       setError(errorMessage)
     }
   }

@@ -22,7 +22,7 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
       setError('')
       if (typeof onLoginSuccess === 'function') onLoginSuccess()
       navigate('/feed')
-    } catch (err: any) {
+    } catch {
       setError('Credenziali non valide')
     }
   }

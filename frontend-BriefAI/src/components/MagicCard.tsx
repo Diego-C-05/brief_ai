@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { useEffect, useState } from 'react'
+import { } from 'react'
 
 type MagicCardProps = {
   articleId?: string
@@ -22,15 +22,8 @@ type MagicCardProps = {
 
 // Card notizia: mostra fonte, sentiment, testo, tag, entità e azioni rapide.
 function MagicCard({ articleId, articleUrl, source, timeAgo, sentiment, title, summary, tags, entities, voteState, votePending = false, isSaved = false, savePending = false, onVoteChange, onSave }: MagicCardProps) {
-  const [showSaveAnimation, setShowSaveAnimation] = useState(false)
-
-  useEffect(() => {
-    if (savePending) {
-      setShowSaveAnimation(true)
-      const timer = setTimeout(() => setShowSaveAnimation(false), 500)
-      return () => clearTimeout(timer)
-    }
-  }, [savePending])
+  // derive animation state directly from `savePending` prop
+  const showSaveAnimation = savePending
 
   const handleVote = (clickedVote: 1 | -1) => {
     if (!articleId || votePending) return
@@ -126,7 +119,9 @@ function ActionButton({ label, tone, children, onClick, disabled, isActive, anim
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation()
     if (disabled) return
-    onClick && onClick()
+    if (onClick) {
+      onClick()
+    }
   }
 
   return (
