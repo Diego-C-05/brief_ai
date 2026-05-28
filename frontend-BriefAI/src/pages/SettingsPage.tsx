@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import FeedSidebar from '../components/FeedSidebar'
 import FeedTopbar from '../components/FeedTopbar'
 import AccountSettings, { type SubscriptionState } from '../components/AccountSettings'
@@ -69,6 +69,8 @@ function persistSettings(snapshot: SettingsSnapshot) {
 // Pagina Impostazioni: gestisce preferenze feed e account con una struttura a tab.
 function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('interests')
+  const [animDirection, setAnimDirection] = useState<'ltr' | 'rtl' | null>(null)
+  const prevTabRef = useRef<SettingsTab | null>(null)
   const [profileIdentity, setProfileIdentity] = useState<ProfileIdentity>({
     username: '',
     email: '',
@@ -103,6 +105,22 @@ function SettingsPage() {
       })
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    const prev = prevTabRef.current
+    if (prev && prev !== activeTab) {
+      // From Interests -> Account: animate left-to-right (new content slides in from left)
+      if (prev === 'interests' && activeTab === 'account') setAnimDirection('ltr')
+      // From Account -> Interests: animate right-to-left
+      if (prev === 'account' && activeTab === 'interests') setAnimDirection('rtl')
+
+      // clear animation class after duration
+      const t = setTimeout(() => setAnimDirection(null), 480)
+      return () => clearTimeout(t)
+    }
+    prevTabRef.current = activeTab
+    return undefined
+  }, [activeTab])
 
   const handleToggleMacroTopic = (topic: string) => {
     // Toggle semplice: se la categoria esiste la rimuove, altrimenti la aggiunge.
@@ -212,34 +230,38 @@ function SettingsPage() {
 
           <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-          {activeTab === 'interests' ? (
-            <div className="settings-stack">
-              <InterestPreferences
-                selectedMacroTopics={selectedMacroTopics}
-                onToggleMacroTopic={handleToggleMacroTopic}
-                onSaveMacroTopics={handleSaveMacroTopics}
-                isSaving={isSavingMacroTopics}
-              />
-              <TrackedKeywords
-                keywords={keywords}
-                keywordInput={keywordInput}
-                onKeywordInputChange={setKeywordInput}
-                onAddKeyword={handleAddKeyword}
-                onRemoveKeyword={handleRemoveKeyword}
-                onSaveKeywords={handleSaveKeywords}
-                isSaving={isSavingKeywords}
-              />
-            </div>
-          ) : (
-            <AccountSettings
-              username={profileIdentity.username || 'Utente'}
-              email={profileIdentity.email || 'Email non disponibile'}
-              subscriptionState={subscriptionState}
-              subscriptionExpiresAt={subscriptionExpiresAt}
-              onUpgrade={handleUpgrade}
-              onCancelSubscription={handleCancelSubscription}
-            />
-          )}
+          <div className={`settings-panels ${animDirection ? `anim-${animDirection}` : ''}`}>
+            {activeTab === 'interests' ? (
+              <div className="settings-panel" key="interests">
+                <InterestPreferences
+                  selectedMacroTopics={selectedMacroTopics}
+                  onToggleMacroTopic={handleToggleMacroTopic}
+                  onSaveMacroTopics={handleSaveMacroTopics}
+                  isSaving={isSavingMacroTopics}
+                />
+                <TrackedKeywords
+                  keywords={keywords}
+                  keywordInput={keywordInput}
+                  onKeywordInputChange={setKeywordInput}
+                  onAddKeyword={handleAddKeyword}
+                  onRemoveKeyword={handleRemoveKeyword}
+                  onSaveKeywords={handleSaveKeywords}
+                  isSaving={isSavingKeywords}
+                />
+              </div>
+            ) : (
+              <div className="settings-panel" key="account">
+                <AccountSettings
+                  username={profileIdentity.username || 'Utente'}
+                  email={profileIdentity.email || 'Email non disponibile'}
+                  subscriptionState={subscriptionState}
+                  subscriptionExpiresAt={subscriptionExpiresAt}
+                  onUpgrade={handleUpgrade}
+                  onCancelSubscription={handleCancelSubscription}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </section>
     </div>

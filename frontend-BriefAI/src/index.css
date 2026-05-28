@@ -1,16 +1,23 @@
 :root {
-  --text: #13212b;
-  --muted: #4e636f;
-  --bg-top: #f7fbff;
-  --bg-bottom: #e8f2ff;
-  --panel-bg: rgba(255, 255, 255, 0.82);
-  --panel-border: #c7d7e3;
-  --panel-shadow: 0 22px 55px rgba(17, 44, 70, 0.18);
+  --text: #0f172a;
+  --muted: #526174;
+  --bg-top: #f7f8fa;
+  --bg-bottom: #edf1f5;
+  --panel-bg: rgba(255, 255, 255, 0.88);
+  --panel-border: rgba(15, 23, 42, 0.09);
+  --panel-shadow: 0 36px 90px rgba(15, 23, 42, 0.14);
   --input-bg: #ffffff;
-  --focus: #1f7ab8;
-  --accent-a: #0e7490;
-  --accent-b: #155e75;
-  --danger: #c23616;
+  --focus: #1e3a8a;
+  --accent-a: #4f46e5;
+  --accent-b: #0f4c81;
+  --accent-c: #7ca6bc;
+  --accent-strong: #312e81;
+  --accent-glow: rgba(79, 70, 229, 0.2);
+  --heading-halo: 0 10px 30px rgba(79, 70, 229, 0.1);
+  --hero-halo: rgba(79, 70, 229, 0.16);
+  --danger: #b42318;
+  --motion-pulse-duration: 1.8s;
+  --motion-sheen-duration: 6s;
 }
 
 * {
@@ -26,17 +33,41 @@ body,
 
 body {
   margin: 0;
-  min-height: 100%;
   color: var(--text);
   font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
   line-height: 1.45;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at 15% 15%, rgba(31, 122, 184, 0.2), transparent 34%),
-    radial-gradient(circle at 85% 85%, rgba(14, 116, 144, 0.22), transparent 28%),
+    radial-gradient(circle at 12% 14%, rgba(31, 63, 97, 0.08), transparent 30%),
+    radial-gradient(circle at 88% 10%, rgba(15, 76, 129, 0.08), transparent 24%),
+    radial-gradient(circle at 82% 82%, rgba(31, 63, 97, 0.05), transparent 28%),
     linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
 }
 
 p {
   margin: 0;
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 8px 18px rgba(108,92,231,0.18), 0 0 0 0 rgba(108,92,231,0.06); }
+  50% { box-shadow: 0 18px 44px rgba(108,92,231,0.22), 0 0 40px 8px rgba(108,92,231,0.04); }
+  100% { box-shadow: 0 8px 18px rgba(108,92,231,0.18), 0 0 0 0 rgba(108,92,231,0.06); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes sheen-sweep {
+  0% { transform: translateX(-120%) rotate(-6deg); opacity: 0; }
+  30% { opacity: 0.8; }
+  60% { transform: translateX(30%) rotate(-6deg); opacity: 0.6; }
+  100% { transform: translateX(120%) rotate(-6deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-pulse-duration: 0s; --motion-sheen-duration: 0s; }
+  * { animation-duration: 0s !important; animation-delay: 0s !important; }
 }

@@ -14,20 +14,20 @@
   top: 0;
   left: 0;
   width: 100%;
-  background: rgba(247, 251, 255, 0.95);
-  backdrop-filter: blur(6px);
+  background: rgba(247, 248, 250, 0.96);
+  backdrop-filter: blur(12px);
   padding: 0 16px 8px;
   z-index: 10;
 }
 
 .progress-track {
   height: 2px;
-  background: #e2e8f0;
+  background: #e5e7eb;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #2563eb, #7c3aed);
+  background: linear-gradient(90deg, #1f3f61, #476b86);
   transition: width 280ms ease;
 }
 
@@ -43,11 +43,13 @@
 .onboarding-card {
   max-width: 780px;
   margin: 0 auto;
-  background: #fff;
+  background: var(--panel-bg);
   border: 1px solid var(--panel-border);
-  border-radius: 18px;
+  border-radius: 20px;
   padding: 28px;
   box-shadow: var(--panel-shadow);
+  backdrop-filter: blur(12px);
+  animation: fade-up 0.55s ease both;
 }
 
 .onboarding-card h1 {
@@ -69,8 +71,8 @@
 
 .topic-card {
   position: relative;
-  border: 1px solid #dce7f0;
-  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 14px;
   padding: 18px 12px;
   color: var(--text);
@@ -78,28 +80,30 @@
   place-items: center;
   gap: 8px;
   cursor: pointer;
-  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
 
 .topic-card:hover {
-  transform: scale(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
 }
 
 .topic-card.selected {
-  border-color: #2563eb;
-  background: #eff6ff;
+  border-color: rgba(31, 63, 97, 0.22);
+  background: #edf4f8;
 }
 
 .topic-emoji {
-  font-size: 2.25rem;
+  font-size: 2rem;
   line-height: 1;
+  opacity: 0.72;
 }
 
 .topic-check {
   position: absolute;
   right: 10px;
   bottom: 8px;
-  color: #2563eb;
+  color: #1f3f61;
   font-weight: 700;
 }
 
@@ -110,8 +114,15 @@
   border-radius: 12px;
   padding: 12px 14px;
   color: #fff;
-  background: linear-gradient(90deg, #2563eb, #7c3aed);
+  background: linear-gradient(90deg, #1f3f61, #476b86);
+  box-shadow: 0 16px 28px rgba(31, 63, 97, 0.18);
   cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+}
+
+.onboarding-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 20px 34px rgba(31, 63, 97, 0.22);
 }
 
 .onboarding-action:disabled {
@@ -131,8 +142,8 @@
 
 .keyword-input:focus-visible {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  border-color: rgba(15, 23, 42, 0.28);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
 }
 
 .chip-section {
@@ -152,9 +163,9 @@
 
 .suggestion-chip {
   margin-top: 0;
-  border: 1px solid #d5dbe4;
-  background: #e5e7eb;
-  color: #1f2937;
+  border: 1px solid #dbe0e6;
+  background: #f1f5f9;
+  color: #334155;
   border-radius: 999px;
   padding: 8px 12px;
   display: inline-flex;
@@ -163,12 +174,12 @@
 }
 
 .suggestion-chip:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
+  background: #e5e7eb;
+  border-color: #cbd5e1;
 }
 
 .tracking-chip {
-  background: #2563eb;
+  background: #1f3f61;
   color: #fff;
   border-radius: 999px;
   padding: 8px 10px;
@@ -184,7 +195,7 @@
   width: 20px;
   height: 20px;
   padding: 0;
-  color: #2563eb;
+  color: #1f3f61;
   background: #fff;
   line-height: 1;
 }
@@ -199,12 +210,24 @@
 .secondary-action {
   margin-top: 18px;
   border: 1px solid #d1d5db;
-  background: #e5e7eb;
-  color: #374151;
+  background: #eef2f6;
+  color: #334155;
 }
 
 @media (min-width: 900px) {
   .topics-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

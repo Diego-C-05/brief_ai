@@ -7,12 +7,14 @@ function HomePage() {
       <div className="home-container">
         {/* Hero principale: comunica il valore del prodotto in pochi secondi. */}
         <header className="hero-section">
-          <p className="hero-badge">
+          <p className="hero-badge" aria-label="Marchio BriefAI">
             <SparklesIcon />
-            <span>La tua intelligence sulle notizie potenziata dall'IA</span>
+            <span className="brand-title accent-clip">BreafAI</span>
           </p>
 
-          <h1>Ottieni notizie pronte all'azione in 30 secondi</h1>
+          <h1>
+            <span className="accent-clip">Ottieni notizie pronte all'azione in 30 secondi</span>
+          </h1>
 
           <p className="hero-subtitle">
             BriefAI trasforma il sovraccarico informativo in intelligence operativa. Riassunti
