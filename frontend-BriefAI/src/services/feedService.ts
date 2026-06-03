@@ -26,7 +26,7 @@ export const fetchPersonalizedFeed = async (): Promise<Article[]> => {
   const res = await fetch(`${N8N}/briefai/feed`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-    body: JSON.stringify({ userId, limit: 20 }),
+    body: JSON.stringify({ userId, limit: 50 }),
   })
   if (!res.ok) {
     const status = res.status
