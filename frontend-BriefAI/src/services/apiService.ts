@@ -24,8 +24,7 @@ const authFetch = (path: string, options: RequestInit = {}) =>
 export const fetchSentimentStats = () =>
   authFetch('/api/stats/sentiment').then((r) => r.json())
 
-// NOTE: trending endpoint used only by the removed TrendsPage and has been
-// removed from client exports.
+// NOTE: the public Trends page was removed; trending data field (`trendingTopics`) is still available on articles.
 
 // GET /api/stats/categories
 export const fetchCategoryStats = () =>

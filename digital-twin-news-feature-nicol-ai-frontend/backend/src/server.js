@@ -86,7 +86,6 @@ mongoose
       console.log('PUT    /api/profile');
       console.log('GET    /api/stats/sentiment');
       console.log('GET    /api/stats/categories');
-      console.log('GET    /api/stats/trending');
       console.log('GET    /api/stats/sources');
       console.log('GET    /api/stats/overview');
       console.log('GET    /health');

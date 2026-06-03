@@ -31,21 +31,7 @@ router.get('/categories', auth, async (req, res) => {
   }
 });
 
-router.get('/trending', auth, async (req, res) => {
-  try {
-    const result = await Article.aggregate([
-      { $match: { status: 'processed' } },
-      { $unwind: '$trendingTopics' },
-      { $group: { _id: '$trendingTopics', count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 10 },
-    ]);
-
-    return res.json({ success: true, data: result });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
+// `GET /api/stats/trending` removed: endpoint deprecated and relocated from the public API surface.
 
 router.get('/sources', auth, async (req, res) => {
   try {

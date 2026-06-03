@@ -51,7 +51,6 @@ BriefAI Frontend e una web app single-page orientata alla curazione di notizie t
 	- OnboardingPage.css
 	- FeedPage.css
 	- SettingsPage.css
-	- TrendsPage.css
 - App.css contiene solo le regole condivise minime della shell applicativa.
 
 ### Verifica tecnica

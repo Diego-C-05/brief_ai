@@ -34,7 +34,6 @@ Il backend espone quattro aree principali: autenticazione, articoli, profilo e s
 ### Statistiche
 - `GET /api/stats/sentiment`
 - `GET /api/stats/categories`
-- `GET /api/stats/trending`
 - `GET /api/stats/sources`
 - `GET /api/stats/overview`
 

@@ -339,14 +339,7 @@ Aggregation:
 - group per `category`
 - sort count desc
 
-### `GET /api/stats/trending`
-
-Aggregation:
-- unwind `trendingTopics`
-- group per topic
-- sort desc
-- limit 10
-
+<!-- `GET /api/stats/trending` removed from public API. -->
 ### `GET /api/stats/sources`
 
 Aggregation:
