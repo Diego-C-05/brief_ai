@@ -191,11 +191,11 @@ function SettingsPage() {
         persistSettings({ selectedMacroTopics, keywords, subscriptionState: (res.profile.subscriptionPlan as SubscriptionState) || 'pro', subscriptionExpiresAt: res.profile.subscriptionExpiresAt || null })
       }
     } catch {
-      // fallback local only
       const nextSubscriptionState: SubscriptionState = 'pro'
+      const nextExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
       setSubscriptionState(nextSubscriptionState)
-      setSubscriptionExpiresAt(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString())
-      persistSettings({ selectedMacroTopics, keywords, subscriptionState: nextSubscriptionState, subscriptionExpiresAt })
+      setSubscriptionExpiresAt(nextExpiresAt)
+      persistSettings({ selectedMacroTopics, keywords, subscriptionState: nextSubscriptionState, subscriptionExpiresAt: nextExpiresAt })
     }
   }
 
@@ -211,7 +211,7 @@ function SettingsPage() {
       const nextSubscriptionState: SubscriptionState = 'free'
       setSubscriptionState(nextSubscriptionState)
       setSubscriptionExpiresAt(null)
-      persistSettings({ selectedMacroTopics, keywords, subscriptionState: nextSubscriptionState, subscriptionExpiresAt })
+      persistSettings({ selectedMacroTopics, keywords, subscriptionState: nextSubscriptionState, subscriptionExpiresAt: null })
     }
   }
 

@@ -9,7 +9,7 @@ function HomePage() {
         <header className="hero-section">
           <p className="hero-badge" aria-label="Marchio BriefAI">
             <SparklesIcon />
-            <span className="brand-title accent-clip">BreafAI</span>
+            <span className="brand-title accent-clip">BriefAI</span>
           </p>
 
           <h1>

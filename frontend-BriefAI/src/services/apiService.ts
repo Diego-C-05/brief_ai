@@ -1,5 +1,5 @@
 const BASE = import.meta.env.VITE_API_URL as string
-import { getAuthHeader } from './authService'
+import { getAuthHeader, decodeToken } from './authService'
 
 export type ProfileResponse = {
   success?: boolean
@@ -20,60 +20,37 @@ const authFetch = (path: string, options: RequestInit = {}) =>
     headers: { ...getAuthHeader(), ...options.headers },
   })
 
-// GET /api/stats/sentiment
-export const fetchSentimentStats = () =>
-  authFetch('/api/stats/sentiment').then((r) => r.json())
-
-// NOTE: the public Trends page was removed; trending data field (`trendingTopics`) is still available on articles.
-
-// GET /api/stats/categories
-export const fetchCategoryStats = () =>
-  authFetch('/api/stats/categories').then((r) => r.json())
-
-// GET /api/stats/sources
-export const fetchSourceStats = () =>
-  authFetch('/api/stats/sources').then((r) => r.json())
-
-// GET /api/stats/overview
-export const fetchOverview = () =>
-  authFetch('/api/stats/overview').then((r) => r.json())
-
 // GET /api/profile
 export const fetchProfile = () =>
   authFetch('/api/profile').then((r) => r.json() as Promise<ProfileResponse>)
 
 // PUT /api/profile
 export const updateProfile = async (data: {
-  userId?: string
   macroTopics?: string[]
   keywords?: string[]
   subscriptionState?: 'free' | 'pro'
 }) => {
-  // Sync to backend
   const backendRes = await authFetch('/api/profile', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
-  }).then((r) => r.json());
+  }).then((r) => r.json())
 
-  // Opt-in sync to n8n if url is present and userId is known
-  const n8nUrl = import.meta.env.VITE_N8N_URL;
-  if (n8nUrl && data.userId) {
+  const n8nUrl = import.meta.env.VITE_N8N_URL
+  const token = localStorage.getItem('briefai_token')
+  const userId = token ? (decodeToken(token) as { userId?: string } | null)?.userId : null
+
+  if (n8nUrl && userId) {
     try {
       await fetch(`${n8nUrl}/briefai/profile/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: data.userId,
-          macroTopics: data.macroTopics,
-          keywords: data.keywords,
-          subscriptionState: data.subscriptionState,
-        })
-      });
+        body: JSON.stringify({ userId, ...data }),
+      })
     } catch (e) {
-      console.warn("Failed to sync profile to n8n webhook", e);
+      console.warn('Failed to sync profile to n8n webhook', e)
     }
   }
 
-  return backendRes;
+  return backendRes
 }

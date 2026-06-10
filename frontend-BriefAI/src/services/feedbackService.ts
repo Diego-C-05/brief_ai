@@ -1,3 +1,5 @@
+import { decodeToken } from './authService'
+
 const N8N = import.meta.env.VITE_N8N_URL
 const FEEDBACK_TIMEOUT_MS = 5000
 
@@ -10,14 +12,9 @@ export const sendFeedback = async (
 
   if (!N8N) throw new Error('VITE_N8N_URL non configurata')
 
-  let payload: { userId?: string } | null = null
-  try {
-    payload = JSON.parse(atob(token.split('.')[1]))
-  } catch {
-    throw new Error('Token non valido')
-  }
-
-  if (!payload?.userId) throw new Error('userId non presente nel token')
+  const payload = decodeToken(token) as { userId?: string } | null
+  if (!payload) throw new Error('Token non valido')
+  if (!payload.userId) throw new Error('userId non presente nel token')
 
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), FEEDBACK_TIMEOUT_MS)
@@ -60,14 +57,9 @@ export const saveArticle = async (articleId: string): Promise<void> => {
     return
   }
 
-  let payload: { userId?: string } | null = null
-  try {
-    payload = JSON.parse(atob(token.split('.')[1]))
-  } catch {
-    throw new Error('Token non valido')
-  }
-
-  if (!payload?.userId) throw new Error('userId non presente nel token')
+  const payload = decodeToken(token) as { userId?: string } | null
+  if (!payload) throw new Error('Token non valido')
+  if (!payload.userId) throw new Error('userId non presente nel token')
 
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), FEEDBACK_TIMEOUT_MS)
@@ -123,18 +115,15 @@ export const unsaveArticle = async (articleId: string): Promise<void> => {
     return
   }
 
-  let payload: { userId?: string } | null = null
-  try {
-    payload = JSON.parse(atob(token.split('.')[1]))
-  } catch {
-    // If token invalid, still try local removal
+  const payload = decodeToken(token) as { userId?: string } | null
+  if (!payload) {
     const saved = JSON.parse(localStorage.getItem('briefai_saved_articles') || '{}')
     delete saved[articleId]
     localStorage.setItem('briefai_saved_articles', JSON.stringify(saved))
     return
   }
 
-  if (!payload?.userId) {
+  if (!payload.userId) {
     const saved = JSON.parse(localStorage.getItem('briefai_saved_articles') || '{}')
     delete saved[articleId]
     localStorage.setItem('briefai_saved_articles', JSON.stringify(saved))

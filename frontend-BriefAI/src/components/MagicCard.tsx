@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react'
 
-import { } from 'react'
-
 type MagicCardProps = {
   articleId?: string
   articleUrl?: string
