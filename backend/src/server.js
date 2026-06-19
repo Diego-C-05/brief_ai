@@ -7,9 +7,7 @@ const morgan = require('morgan');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
-const articleRoutes = require('./routes/articles');
 const profileRoutes = require('./routes/profile');
-const statsRoutes = require('./routes/stats');
 
 const app = express();
 
@@ -17,7 +15,7 @@ app.use(helmet());
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',')
   : process.env.NODE_ENV === 'production'
-    ? [process.env.FRONTEND_URL || 'https://your-production-domain.com']//placeholder inutile
+    ? [process.env.FRONTEND_URL || 'https://your-production-domain.com']//placeholder
     : ['http://localhost:5173'];
 
 app.use(
@@ -28,7 +26,7 @@ app.use(
       if (allowedOrigins.includes(origin) || localhostRegex.test(origin)) return callback(null, true);
       return callback(new Error('Not allowed by CORS'));
     },
-    credentials: true,//probabilmente inutile
+    credentials: true,//cookie non ancora implementati
   })
 );
 app.use(morgan('dev'));
@@ -36,16 +34,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/auth', authRoutes);
-app.use('/api/articles', articleRoutes);
 app.use('/api/profile', profileRoutes);
-app.use('/api/stats', statsRoutes);
 
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     service: 'BriefAI Backend',
-    version: '1.0.0',//togli
   });
 });
 
@@ -56,16 +51,14 @@ app.use((req, res) => {
   });
 });
 
-app.use((err, req, res, next) => {
+// Error-handling middleware: i 4 parametri (incluso _next, non usato)
+// servono a Express per riconoscerlo come gestore errori.
+app.use((err, req, res, _next) => {
   console.error('[Server Error]', err.stack);
   res.status(500).json({
     success: false,
     error: process.env.NODE_ENV === 'production' ? 'Errore interno del server.' : err.message,
   });
-  if (typeof next === 'function') {//rischiosa
-    return next(err);
-  }
-  return undefined;
 });
 
 const port = Number.parseInt(process.env.PORT, 10) || 5000;
@@ -80,14 +73,8 @@ mongoose
       console.log('POST   /api/auth/register');
       console.log('POST   /api/auth/login');
       console.log('GET    /api/auth/me');
-      console.log('GET    /api/articles');
-      console.log('GET    /api/articles/:uniqueKey');
       console.log('GET    /api/profile');
       console.log('PUT    /api/profile');
-      console.log('GET    /api/stats/sentiment');
-      console.log('GET    /api/stats/categories');
-      console.log('GET    /api/stats/sources');
-      console.log('GET    /api/stats/overview');
       console.log('GET    /health');
     });
   })

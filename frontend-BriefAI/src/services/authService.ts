@@ -66,5 +66,5 @@ export const getMe = async () => {
 };
 
 // Logout locale
-export const logout = () =>
-  localStorage.removeItem('briefai_token');
+// export const logout = () =>
+//   localStorage.removeItem('briefai_token');
