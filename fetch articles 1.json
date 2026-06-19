@@ -1,0 +1,408 @@
+{
+  "name": "fetch articles 1",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "6df9d581-75b2-405f-8abc-7e0d1e197a06",
+      "name": "Cron Trigger (15 min)1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/feed/",
+        "options": {}
+      },
+      "id": "78489403-2b3b-4334-bacf-06fc7fb05b7a",
+      "name": "RSS — TechCrunch1",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        448,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.ansa.it/sito/ansait_rss.xml",
+        "options": {}
+      },
+      "id": "2cb2baa3-e797-45fd-86e2-71603376e94f",
+      "name": "RSS — ANSA1",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        448,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=site:reuters.com+technology&hl=en&gl=US&ceid=US:en",
+        "responseFormat": "string",
+        "options": {},
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0"
+            }
+          ]
+        }
+      },
+      "id": "1df464f2-8b36-4547-9f02-f900e30e572c",
+      "name": "HTTP — Reuters1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        448,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const xml = $input.first().json.body || $input.first().json.data || '';\nconst results = [];\n\nconst itemRegex = /<item>([\\s\\S]*?)<\\/item>/g;\nlet match;\n\nwhile ((match = itemRegex.exec(xml)) !== null) {\n  const item = match[1];\n\n  const title = (item.match(/<title>([\\s\\S]*?)<\\/title>/) || [])[1] || '';\n  const link = (item.match(/<link>([\\s\\S]*?)<\\/link>/) || [])[1] || '';\n  const pubDate = (item.match(/<pubDate>([\\s\\S]*?)<\\/pubDate>/) || [])[1] || '';\n  const source = (item.match(/<source[^>]*>([\\s\\S]*?)<\\/source>/) || [])[1] || '';\n  const description = (item.match(/<description>([\\s\\S]*?)<\\/description>/) || [])[1] || '';\n\n  if (!title || !link) continue;\n  if (!source.toLowerCase().includes('reuters')) continue;\n\n  results.push({\n    json: {\n      title: title.replace(' - Reuters', '').trim(),\n      url: link.trim(),\n      link: link.trim(),\n      creator: '',\n      content: description.replace(/<[^>]*>/g, '').trim().substring(0, 2000),\n      contentSnippet: description.replace(/<[^>]*>/g, '').trim().substring(0, 500),\n      guid: link.trim(),\n      categories: [],\n      isoDate: pubDate ? new Date(pubDate).toISOString() : '',\n      pubDate: pubDate.trim(),\n      source: 'Reuters',\n      category: 'news',\n      status: 'raw',\n      createdAt: new Date().toISOString(),\n      __sourceName: 'RSS — Reuters'\n    }\n  });\n\n  if (results.length >= 15) break;\n}\n\nreturn results;"
+      },
+      "id": "6047b58f-f6dd-4ddb-b73f-ce65b2cba000",
+      "name": "Parse — Reuters1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst results = [];\n\nfor (const item of $input.all()) {\n  const { url, title } = item.json;\n  if (!url && !title) continue;\n\n  const raw = `${url}::${title}`.toLowerCase().trim();\n  const uniqueKey = crypto.createHash('sha256').update(raw).digest('hex');\n\n  results.push({ json: { ...item.json, uniqueKey } });\n}\n\nreturn results;"
+      },
+      "id": "55a02d38-8d38-4717-8668-17685057e243",
+      "name": "Generate Unique Key1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const saved = $input.all().length;\nconsole.log(`[BriefAI W1] ✅ Articoli nuovi salvati: ${saved}`);\nreturn $input.all();"
+      },
+      "id": "9d9e3bb7-8cda-40b3-94cc-914e4f9f046b",
+      "name": "Log — Saved OK1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const duplicates = $input.all().length;\nconsole.log(`[BriefAI W1] ⚠️ Duplicati scartati (unique index): ${duplicates}`);\nreturn [];"
+      },
+      "id": "1ed778d7-1680-4b16-b183-b33d8878dc24",
+      "name": "Log — Duplicates Discarded1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nfor (const item of $input.all()) {\n  const raw = item.json;\n\n  const title = (raw.title || '').toString().replace(/<[^>]*>/g, '').trim();\n  const link = (raw.link || raw.url || raw.guid || '').toString().trim();\n  if (!title || !link) continue;\n\n  const creator = (raw.creator || raw['dc:creator'] || raw.author || '').toString().trim();\n  const content = (raw.content || raw['content:encoded'] || raw.description || '').toString().replace(/<[^>]*>/g, '').trim().substring(0, 2000);\n  const contentSnippet = (raw.contentSnippet || raw.description || '').toString().replace(/<[^>]*>/g, '').trim().substring(0, 500);\n  const guid = (raw.guid || raw.id || link).toString().trim();\n  const categories = Array.isArray(raw.categories) ? raw.categories : raw.category ? [raw.category] : [];\n\n  const rawDate = raw.isoDate || raw.pubDate || raw.date || raw.published || '';\n  let isoDate = '';\n  if (rawDate) {\n    const parsed = new Date(rawDate);\n    if (!isNaN(parsed.getTime())) isoDate = parsed.toISOString();\n  }\n\n  results.push({\n    json: {\n      title,\n      url: link,\n      link,\n      creator,\n      content,\n      contentSnippet,\n      guid,\n      categories,\n      isoDate,\n      pubDate: raw.pubDate || isoDate,\n      source: 'TechCrunch',\n      category: 'tech',\n      status: 'raw',\n      createdAt: new Date().toISOString(),\n      __sourceName: 'RSS — TechCrunch'\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "3161033a-68db-4260-8198-dae2de33cfda",
+      "name": "Tag — TechCrunch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nfor (const item of $input.all()) {\n  const raw = item.json;\n\n  const title = (raw.title || '').toString().replace(/<[^>]*>/g, '').trim();\n  const link = (raw.link || raw.url || raw.guid || '').toString().trim();\n  if (!title || !link) continue;\n\n  const creator = (raw.creator || raw['dc:creator'] || raw.author || '').toString().trim();\n  const content = (raw.content || raw['content:encoded'] || raw.description || '').toString().replace(/<[^>]*>/g, '').trim().substring(0, 2000);\n  const contentSnippet = (raw.contentSnippet || raw.description || '').toString().replace(/<[^>]*>/g, '').trim().substring(0, 500);\n  const guid = (raw.guid || raw.id || link).toString().trim();\n  const categories = Array.isArray(raw.categories) ? raw.categories : raw.category ? [raw.category] : [];\n\n  const rawDate = raw.isoDate || raw.pubDate || raw.date || raw.published || '';\n  let isoDate = '';\n  if (rawDate) {\n    const parsed = new Date(rawDate);\n    if (!isNaN(parsed.getTime())) isoDate = parsed.toISOString();\n  }\n\n  results.push({\n    json: {\n      title,\n      url: link,\n      link,\n      creator,\n      content,\n      contentSnippet,\n      guid,\n      categories,\n      isoDate,\n      pubDate: raw.pubDate || isoDate,\n      source: 'ANSA',\n      category: 'news-it',\n      status: 'raw',\n      createdAt: new Date().toISOString(),\n      __sourceName: 'RSS — ANSA'\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "0023f91c-52d2-40ce-a4b8-65d5eacb8cd3",
+      "name": "Tag — ANSA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "id": "ea7bf5f2-f7d3-44bc-b015-808b30ba952b",
+      "name": "Merge Final (AB + CD)",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        944,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "articles",
+        "fields": "title, url, link, creator, content, contentSnippet, guid, categories, isoDate, pubDate, source, category, status, uniqueKey, createdAt, __sourceName",
+        "options": {}
+      },
+      "id": "5ae54a1b-5065-4074-8cde-f551b42fe69b",
+      "name": "MongoDB — Save Raw Article",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        352
+      ],
+      "credentials": {
+        "mongoDb": {
+          "id": "kl41W3XZ89RwT7Gg",
+          "name": "MongoDB Atlas — BriefAI"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "DEDUPLICAZIONE: Se uniqueKey esiste già (E11000), MongoDB rifiuta l'insert. Con continueErrorOutput il workflow non si blocca: i duplicati vanno all'output di errore, i nuovi all'output principale."
+    },
+    {
+      "parameters": {
+        "url": "https://hnrss.org/frontpage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "application/rss+xml, application/xml, text/xml"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        448,
+        432
+      ],
+      "id": "6f925479-42f8-45e2-b740-f26d4fadd026",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const xml = $input.first().json.data || $input.first().json.body || '';\nconst results = [];\n\nconst itemRegex = /<item>([\\s\\S]*?)<\\/item>/g;\nlet match;\n\nwhile ((match = itemRegex.exec(xml)) !== null) {\n  const item = match[1];\n\n  const title =\n    (item.match(/<title><!\\[CDATA\\[(.*?)\\]\\]><\\/title>/) || item.match(/<title>(.*?)<\\/title>/) || [])[1] || '';\n\n  const link =\n    (item.match(/<link>(.*?)<\\/link>/) || item.match(/<guid>(.*?)<\\/guid>/) || [])[1] || '';\n\n  const pubDate =\n    (item.match(/<pubDate>(.*?)<\\/pubDate>/) || [])[1] || '';\n\n  const description =\n    (item.match(/<description><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/description>/) || item.match(/<description>([\\s\\S]*?)<\\/description>/) || [])[1] || '';\n\n  if (!title || !link) continue;\n\n  results.push({\n    json: {\n      title: title.trim(),\n      url: link.trim(),\n      link: link.trim(),\n      creator: '',\n      content: description.replace(/<[^>]*>/g, '').trim().substring(0, 2000),\n      contentSnippet: description.replace(/<[^>]*>/g, '').trim().substring(0, 500),\n      guid: link.trim(),\n      categories: [],\n      isoDate: pubDate ? new Date(pubDate).toISOString() : '',\n      pubDate: pubDate.trim(),\n      source: 'Hacker News',\n      category: 'social',\n      status: 'raw',\n      createdAt: new Date().toISOString(),\n      __sourceName: 'HACKER - NEWS'\n    }\n  });\n\n  if (results.length >= 15) break;\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        432
+      ],
+      "id": "308518bb-110e-4aee-9d19-6b4c5b811ab1",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron Trigger (15 min)1": {
+      "main": [
+        [
+          {
+            "node": "RSS — TechCrunch1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS — ANSA1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP — Reuters1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS — TechCrunch1": {
+      "main": [
+        [
+          {
+            "node": "Tag — TechCrunch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS — ANSA1": {
+      "main": [
+        [
+          {
+            "node": "Tag — ANSA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP — Reuters1": {
+      "main": [
+        [
+          {
+            "node": "Parse — Reuters1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse — Reuters1": {
+      "main": [
+        [
+          {
+            "node": "Merge Final (AB + CD)",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Generate Unique Key1": {
+      "main": [
+        [
+          {
+            "node": "MongoDB — Save Raw Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag — TechCrunch": {
+      "main": [
+        [
+          {
+            "node": "Merge Final (AB + CD)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag — ANSA": {
+      "main": [
+        [
+          {
+            "node": "Merge Final (AB + CD)",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge Final (AB + CD)": {
+      "main": [
+        [
+          {
+            "node": "Generate Unique Key1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB — Save Raw Article": {
+      "main": [
+        [
+          {
+            "node": "Log — Saved OK1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log — Duplicates Discarded1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Merge Final (AB + CD)",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e83fb2f0-802b-4bb5-9f25-c8015bacbce4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2acc3711f22c38e399ef50a7add4449155a2e524426d9c7ec1e22ae109e9664"
+  },
+  "nodeGroups": [],
+  "id": "M1ZzZrnz6xHumjHe",
+  "tags": []
+}

@@ -1,12 +1,14 @@
 const express = require('express');
 const User = require('../models/User');
 const UserProfile = require('../models/UserProfile');
-const auth = require('../middleware/auth');
+const auth = require('../middleware/auth'); // tutte le rotte qui sono protette
 
 const router = express.Router();
 
+// GET /api/profile — restituisce il profilo completo dell'utente loggato.
 router.get('/', auth, async (req, res) => {
   try {
+    // Carica l'utente da "users" (senza l'hash della password).
     const user = await User.findOne({ userId: req.user.userId }).select('-password');
 
     if (!user) {
@@ -16,13 +18,14 @@ router.get('/', auth, async (req, res) => {
       });
     }
 
-    // Read associated UserProfile (may be created/updated by n8n) verifica se n8n workflow 3 e 4 funzionano
+    // Legge anche il profilo da "user_profiles" (può essere aggiornato dai workflow n8n).
+    // .lean() restituisce un oggetto JS semplice invece di un documento Mongoose (più leggero).
     const userProfile = await UserProfile.findOne({ userId: user.userId }).lean();
 
-    // Convert weights map (from User model) to plain object
+    // I pesi in "users" sono una Map: la convertiamo in oggetto piano per la risposta JSON.
     const userWeights = user.weights instanceof Map ? Object.fromEntries(user.weights) : user.weights || {};
 
-    // Build merged profile: prefer values from userProfile when available
+    // Profilo di base costruito dai dati di "users".
     const profile = {
       userId: user.userId,
       email: user.email,
@@ -36,6 +39,7 @@ router.get('/', auth, async (req, res) => {
       subscriptionExpiresAt: user.subscriptionExpiresAt || null,
     };
 
+    // Se esiste il profilo n8n, i suoi valori hanno la precedenza (sono i più aggiornati).
     if (userProfile) {
       profile.macroTopics = userProfile.macroTopics || profile.macroTopics;
       profile.keywords = userProfile.keywords || profile.keywords;
@@ -55,6 +59,7 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// PUT /api/profile — aggiorna le preferenze dell'utente loggato.
 router.put('/', auth, async (req, res) => {
   try {
     const { macroTopics, keywords, preferredSources, subscriptionState } = req.body;
@@ -67,14 +72,15 @@ router.put('/', auth, async (req, res) => {
       });
     }
 
+    // Aggiorna solo i campi effettivamente presenti nel body (update parziale).
     if (macroTopics) user.macroTopics = macroTopics;
     if (keywords) user.keywords = keywords;
     if (preferredSources) user.preferredSources = preferredSources;
     if (subscriptionState) {
-      // subscriptionState expected to be 'free' or 'pro'
+      // subscriptionState atteso = 'free' o 'pro'.
       user.subscriptionPlan = subscriptionState === 'pro' ? 'pro' : 'free';
       if (subscriptionState === 'pro') {
-        // set expiry to 30 days from now by default
+        // Piano pro: scadenza a 30 giorni da ora.
         user.subscriptionExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
       } else {
         user.subscriptionExpiresAt = null;
@@ -82,9 +88,11 @@ router.put('/', auth, async (req, res) => {
     }
 
     user.updatedAt = new Date();
+    // save() fa scattare anche l'hook post-save di User.js che sincronizza user_profiles.
     await user.save();
 
-    // Sync su user_profiles in modo che n8n e backend siano allineati
+    // Sync esplicito su user_profiles (ridondante con l'hook, ma garantisce l'allineamento).
+    // Avvolto in try/catch: se fallisce non blocca la risposta all'utente.
     try {
       await UserProfile.findOneAndUpdate(
         { userId: user.userId },
@@ -102,6 +110,7 @@ router.put('/', auth, async (req, res) => {
       console.warn('[Profile Sync] Impossibile aggiornare user_profiles:', e.message || e);
     }
 
+    // Converte i pesi (Map) in oggetto piano per la risposta.
     const weights = user.weights instanceof Map ? Object.fromEntries(user.weights) : user.weights || {};
 
     return res.json({
