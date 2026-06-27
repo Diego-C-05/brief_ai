@@ -6,14 +6,104 @@
         "batchSize": 2,
         "options": {}
       },
-      "id": "79ee31b0-3a6d-4b9a-a44d-11112503ca15",
+      "id": "c71e4862-f657-4112-ab9a-bceb163df41f",
       "name": "Split LLM — Batches of 1",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        2576,
-        2896
+        0,
+        0
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-ready-found",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "021737e6-164a-43e0-ab80-10258a6f5a70",
+      "name": "IF — Ready Articles Found? (≥1)2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "7f3f2075-9d41-44bf-8366-6d6e32242502",
+      "name": "Split — Enrich 1 by 2",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1072,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 20
+            }
+          ]
+        }
+      },
+      "id": "24634bad-3e2c-45aa-b006-c4d69225c731",
+      "name": "Cron — Every 20 Min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1600,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "collection": "articles",
+        "options": {
+          "limit": 30,
+          "sort": "{ \"createdAt\": 1 }"
+        },
+        "query": "{ \"status\": \"raw\" }"
+      },
+      "id": "71e80002-a3db-4e35-a024-86f8fa3680b2",
+      "name": "MongoDB — Query Raw Articles",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        -1344,
+        336
+      ],
+      "credentials": {
+        "mongoDb": {
+          "id": "8H9RCjis4RCBxoSI",
+          "name": "MongoDB account"
+        }
+      }
     },
     {
       "parameters": {
@@ -22,60 +112,61 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1728,
-        2912
+        -848,
+        16
       ],
-      "id": "8570cc36-389a-4fc0-aca7-136be4c12d68",
-      "name": "Wait2",
+      "id": "2eb9ffb5-f4d2-4a7c-b272-1b8b11d0bf4a",
+      "name": "Wait",
       "webhookId": "b38a245f-185a-4859-b98c-b61497ef7883"
     },
     {
       "parameters": {
-        "jsCode": "const count = $input.all().length;\nconsole.log('[BriefAI W2] ✅ Batch LLM elaborato: ' + count + ' articoli → processed.');\nreturn $input.all();"
-      },
-      "id": "123a113b-523d-429c-a870-16c69735ec05",
-      "name": "Log — Batch LLM Complete2",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3984,
-        2912
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "update",
         "collection": "articles",
-        "updateKey": "uniqueKey",
-        "fields": "summary, sentiment, entities, macroTopics, aiProcessed, aiError, processedAt, status",
-        "options": {}
+        "options": {
+          "limit": 30,
+          "sort": "{ \"createdAt\": 1 }"
+        },
+        "query": "{ \"status\": \"ready\" }"
       },
-      "id": "02da98e5-5cb2-4b8d-a231-aff6508b27b3",
-      "name": "MongoDB — Update to Processed2",
+      "id": "75bc1bf3-93ee-459b-b6e5-1710ff3fd560",
+      "name": "MongoDB — Query Ready Articles",
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1,
       "position": [
-        3696,
-        2912
+        -560,
+        16
       ],
       "credentials": {
         "mongoDb": {
-          "id": "kl41W3XZ89RwT7Gg",
-          "name": "MongoDB Atlas — BriefAI"
+          "id": "8H9RCjis4RCBxoSI",
+          "name": "MongoDB account"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const VALID_TOPICS = new Set([\n  'Intelligenza Artificiale',\n  'Cybersecurity',\n  'Business & Finanza',\n  'Politica & Geopolitica',\n  'Startup & Innovazione',\n  'Software & Sviluppo',\n  'Scienza & Ricerca',\n  'Energia & Ambiente',\n  'Economia & Mercati',\n  'Social Media & Cultura',\n  'Salute & Medicina',\n  'Trasporti & Mobilità'\n]);\n\nconst DEFAULT_TOPIC = ['Scienza & Ricerca'];\n\nconst prepareOutput = $('Prepare LLM Prompt2').first().json;\nconst articles = prepareOutput.articles || [];\nconst llmRoot = $input.first().json;\nconst llmBody = llmRoot.body ?? llmRoot;\nconst statusCode = llmRoot.statusCode ?? llmBody?.statusCode ?? 200;\n\nconst results = [];\n\nfunction sanitizeTopics(raw) {\n  if (!Array.isArray(raw) || raw.length === 0) return DEFAULT_TOPIC;\n  const valid = raw.filter(t => VALID_TOPICS.has(t));\n  return valid.length > 0 ? valid : DEFAULT_TOPIC;\n}\n\nfunction cleanText(value) {\n  return String(value || '')\n    .replace(/```json|```/gi, '')\n    .trim();\n}\n\nfunction getResponseContent(body) {\n  if (!body) return '';\n  if (typeof body === 'string') return body;\n  if (typeof body === 'object') {\n    return body.choices?.[0]?.message?.content\n      ?? body.output_text\n      ?? body.message?.content\n      ?? '';\n  }\n  return '';\n}\n\nfunction extractJsonArray(raw) {\n  const cleaned = cleanText(raw);\n  const firstArray = cleaned.match(/\\[[\\s\\S]*\\]/);\n  if (firstArray) return firstArray[0];\n  return cleaned;\n}\n\nfunction fallbackSummary(article) {\n  const candidate = String(\n    article.contentSnippet ||\n    article.content ||\n    article.title ||\n    ''\n  ).replace(/\\s+/g, ' ').trim();\n\n  return candidate.substring(0, 300);\n}\n\nfunction buildFallback(errorMessage) {\n  for (const article of articles) {\n    results.push({\n      json: {\n        _id: article._id,\n        uniqueKey: article.uniqueKey,\n        summary: fallbackSummary(article),\n        sentiment: 'Neutral',\n        entities: [],\n        macroTopics: DEFAULT_TOPIC,\n        aiProcessed: false,\n        aiError: errorMessage,\n        processedAt: new Date().toISOString(),\n        status: 'processed'\n      }\n    });\n  }\n  return results;\n}\n\nconst rawContent = getResponseContent(llmBody);\n\nif (statusCode !== 200 || !rawContent) {\n  console.warn('[BriefAI W2] Fallback attivato. HTTP status:', statusCode);\n  return buildFallback(`HTTP ${statusCode} — LLM non disponibile`);\n}\n\nlet parsed = [];\ntry {\n  const jsonText = extractJsonArray(rawContent);\n  parsed = JSON.parse(jsonText);\n  if (!Array.isArray(parsed)) throw new Error('Risposta non è un array JSON');\n} catch (e) {\n  console.error('[BriefAI W2] JSON parse error:', e.message);\n  return buildFallback('JSON parse error: ' + e.message);\n}\n\nconst aiByIndex = {};\nconst aiByKey = {};\n\nfor (const item of parsed) {\n  if (!item || typeof item !== 'object') continue;\n  if (Number.isInteger(item.index)) aiByIndex[item.index] = item;\n  if (typeof item.uniqueKey === 'string' && item.uniqueKey.trim()) {\n    aiByKey[item.uniqueKey.trim()] = item;\n  }\n}\n\nfor (let i = 0; i < articles.length; i++) {\n  const article = articles[i];\n  const ai = aiByKey[String(article.uniqueKey || '').trim()] || aiByIndex[i + 1] || {};\n\n  const summary = String(ai.summary || fallbackSummary(article)).replace(/\\s+/g, ' ').trim().substring(0, 300);\n  const sentiment = ['Positive', 'Negative', 'Neutral'].includes(ai.sentiment) ? ai.sentiment : 'Neutral';\n\n  results.push({\n    json: {\n      _id: article._id,\n      uniqueKey: article.uniqueKey,\n      summary,\n      sentiment,\n      entities: Array.isArray(ai.entities) ? ai.entities : [],\n      macroTopics: sanitizeTopics(ai.macroTopics),\n      aiProcessed: true,\n      aiError: null,\n      processedAt: new Date().toISOString(),\n      status: 'processed'\n    }\n  });\n}\n\nreturn results;"
+        "jsCode": "console.log('[BriefAI W2] Nessun articolo ready per LLM. Fine pipeline.');\nreturn [];"
       },
-      "id": "9b2de9bc-7b45-41bb-8dad-c657f52908fe",
-      "name": "Parse LLM Response + Fallback2",
+      "id": "2b535eb0-aae9-4a0e-9f87-4fd10baea1df",
+      "name": "Stop — No Ready Articles",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3424,
-        2912
+        0,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const MACRO_TOPICS = [\n  'Intelligenza Artificiale',\n  'Cybersecurity',\n  'Business & Finanza',\n  'Politica & Geopolitica',\n  'Startup & Innovazione',\n  'Software & Sviluppo',\n  'Scienza & Ricerca',\n  'Energia & Ambiente',\n  'Economia & Mercati',\n  'Social Media & Cultura',\n  'Salute & Medicina',\n  'Trasporti & Mobilità'\n];\n\nconst articles = $input.all().map(i => i.json);\n\nconst articleList = articles.map((a, i) => {\n  const title = String(a.title || '').trim();\n  // content è già pulito da HTML dalla fase di enrichment\n  const content = String(a.content || a.contentSnippet || '').trim().substring(0, 500);\n  const source = String(a.source || a.__sourceName || '').trim();\n  const pubDate = String(a.pubDate || a.isoDate || '').trim();\n  const url = String(a.url || '').trim();\n  const uniqueKey = String(a.uniqueKey || a._id || `article-${i + 1}`).trim();\n\n  return [\n    `[${i + 1}] UNIQUEKEY: ${uniqueKey}`,\n    `TITOLO: ${title}`,\n    `FONTE: ${source}`,\n    `DATA: ${pubDate}`,\n    `CONTENUTO: ${content}`,\n    `URL: ${url}`\n  ].join('\\n');\n}).join('\\n\\n---\\n\\n');\n\nconst systemPrompt = `Sei un assistente di business intelligence. Analizza ogni articolo e restituisci SOLO un JSON array valido con questa struttura per ciascun articolo:\n[\n  {\n    \"index\": <numero intero 1-based>,\n    \"uniqueKey\": \"<uniqueKey_esatto_dall_input>\",\n    \"summary\": \"<riassunto in italiano max 50 parole>\",\n    \"sentiment\": \"<Positive | Negative | Neutral>\",\n    \"entities\": [\"<entita1>\", \"<entita2>\"],\n    \"macroTopics\": [\"<topic_dalla_lista>\"]\n  }\n]\n\nREGOLA CRITICA per macroTopics:\n- Scegli SOLO valori da questa lista: ${MACRO_TOPICS.join(', ')}\n- Minimo 1, massimo 3 valori per articolo\n- Non inventare mai topic nuovi o varianti\n- Se nessun topic è pertinente, usa [\"Scienza & Ricerca\"]\n\nREGOLA CRITICA per uniqueKey:\n- Copia esattamente il valore UNIQUEKEY fornito nell'input\n- Se non sei sicuro, usa comunque la stessa stringa mostrata nell'articolo\n\nNessun testo aggiuntivo. Nessun markdown. Solo JSON puro.`;\n\nconst userPrompt = `Analizza i seguenti ${articles.length} articoli:\n\n${articleList}`;\n\nreturn [{\n  json: {\n    articles,\n    batchSize: articles.length,\n    payload: {\n      model: 'openrouter/free',\n      max_tokens: 2500,\n      temperature: 0.2,\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userPrompt }\n      ]\n    }\n  }\n}];"
+      },
+      "id": "1ed42502-8cdb-4033-9019-ed67afeca23c",
+      "name": "Prepare LLM Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        16
       ]
     },
     {
@@ -109,141 +200,35 @@
           "timeout": 45000
         }
       },
-      "id": "a8b65f8a-4928-41d3-9759-b4b593472a06",
-      "name": "OpenRouter — LLM Request2",
+      "id": "69af1a2f-bbf8-4120-a763-12738913d74a",
+      "name": "OpenRouter — LLM Request",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        3136,
-        2912
+        560,
+        16
       ],
       "retryOnFail": true,
       "waitBetweenTries": 5000,
       "credentials": {
         "httpHeaderAuth": {
-          "id": "ZZ5K28tehtPZDKY5",
-          "name": "openrouter/free"
+          "id": "fzSIeS531Tw4HO7l",
+          "name": "Header Auth account"
         }
       },
       "notes": "La credential httpHeaderAuth deve iniettare Authorization: Bearer <OPENROUTER_KEY>."
     },
     {
       "parameters": {
-        "jsCode": "const MACRO_TOPICS = [\n  'Intelligenza Artificiale',\n  'Cybersecurity',\n  'Business & Finanza',\n  'Politica & Geopolitica',\n  'Startup & Innovazione',\n  'Software & Sviluppo',\n  'Scienza & Ricerca',\n  'Energia & Ambiente',\n  'Economia & Mercati',\n  'Social Media & Cultura',\n  'Salute & Medicina',\n  'Trasporti & Mobilità'\n];\n\nconst articles = $input.all().map(i => i.json);\n\nconst articleList = articles.map((a, i) => {\n  const title = String(a.title || '').trim();\n  // content è già pulito da HTML dalla fase di enrichment\n  const content = String(a.content || a.contentSnippet || '').trim().substring(0, 500);\n  const source = String(a.source || a.__sourceName || '').trim();\n  const pubDate = String(a.pubDate || a.isoDate || '').trim();\n  const url = String(a.url || '').trim();\n  const uniqueKey = String(a.uniqueKey || a._id || `article-${i + 1}`).trim();\n\n  return [\n    `[${i + 1}] UNIQUEKEY: ${uniqueKey}`,\n    `TITOLO: ${title}`,\n    `FONTE: ${source}`,\n    `DATA: ${pubDate}`,\n    `CONTENUTO: ${content}`,\n    `URL: ${url}`\n  ].join('\\n');\n}).join('\\n\\n---\\n\\n');\n\nconst systemPrompt = `Sei un assistente di business intelligence. Analizza ogni articolo e restituisci SOLO un JSON array valido con questa struttura per ciascun articolo:\n[\n  {\n    \"index\": <numero intero 1-based>,\n    \"uniqueKey\": \"<uniqueKey_esatto_dall_input>\",\n    \"summary\": \"<riassunto in italiano max 50 parole>\",\n    \"sentiment\": \"<Positive | Negative | Neutral>\",\n    \"entities\": [\"<entita1>\", \"<entita2>\"],\n    \"macroTopics\": [\"<topic_dalla_lista>\"]\n  }\n]\n\nREGOLA CRITICA per macroTopics:\n- Scegli SOLO valori da questa lista: ${MACRO_TOPICS.join(', ')}\n- Minimo 1, massimo 3 valori per articolo\n- Non inventare mai topic nuovi o varianti\n- Se nessun topic è pertinente, usa [\"Scienza & Ricerca\"]\n\nREGOLA CRITICA per uniqueKey:\n- Copia esattamente il valore UNIQUEKEY fornito nell'input\n- Se non sei sicuro, usa comunque la stessa stringa mostrata nell'articolo\n\nNessun testo aggiuntivo. Nessun markdown. Solo JSON puro.`;\n\nconst userPrompt = `Analizza i seguenti ${articles.length} articoli:\n\n${articleList}`;\n\nreturn [{\n  json: {\n    articles,\n    batchSize: articles.length,\n    payload: {\n      model: 'openrouter/free',\n      max_tokens: 2500,\n      temperature: 0.2,\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userPrompt }\n      ]\n    }\n  }\n}];"
+        "jsCode": "const VALID_TOPICS = new Set([\n  'Intelligenza Artificiale',\n  'Cybersecurity',\n  'Business & Finanza',\n  'Politica & Geopolitica',\n  'Startup & Innovazione',\n  'Software & Sviluppo',\n  'Scienza & Ricerca',\n  'Energia & Ambiente',\n  'Economia & Mercati',\n  'Social Media & Cultura',\n  'Salute & Medicina',\n  'Trasporti & Mobilità'\n]);\n\nconst DEFAULT_TOPIC = ['Scienza & Ricerca'];\n\nconst prepareOutput = $('Prepare LLM Prompt').first().json;\nconst articles = prepareOutput.articles || [];\nconst llmRoot = $input.first().json;\nconst llmBody = llmRoot.body ?? llmRoot;\nconst statusCode = llmRoot.statusCode ?? llmBody?.statusCode ?? 200;\n\nconst results = [];\n\nfunction sanitizeTopics(raw) {\n  if (!Array.isArray(raw) || raw.length === 0) return DEFAULT_TOPIC;\n  const valid = raw.filter(t => VALID_TOPICS.has(t));\n  return valid.length > 0 ? valid : DEFAULT_TOPIC;\n}\n\nfunction cleanText(value) {\n  return String(value || '')\n    .replace(/```json|```/gi, '')\n    .trim();\n}\n\nfunction getResponseContent(body) {\n  if (!body) return '';\n  if (typeof body === 'string') return body;\n  if (typeof body === 'object') {\n    return body.choices?.[0]?.message?.content\n      ?? body.output_text\n      ?? body.message?.content\n      ?? '';\n  }\n  return '';\n}\n\nfunction extractJsonArray(raw) {\n  const cleaned = cleanText(raw);\n  const firstArray = cleaned.match(/\\[[\\s\\S]*\\]/);\n  if (firstArray) return firstArray[0];\n  return cleaned;\n}\n\nfunction fallbackSummary(article) {\n  const candidate = String(\n    article.contentSnippet ||\n    article.content ||\n    article.title ||\n    ''\n  ).replace(/\\s+/g, ' ').trim();\n\n  return candidate.substring(0, 300);\n}\n\nfunction buildFallback(errorMessage) {\n  for (const article of articles) {\n    results.push({\n      json: {\n        _id: article._id,\n        uniqueKey: article.uniqueKey,\n        summary: fallbackSummary(article),\n        sentiment: 'Neutral',\n        entities: [],\n        macroTopics: DEFAULT_TOPIC,\n        aiProcessed: false,\n        aiError: errorMessage,\n        processedAt: new Date().toISOString(),\n        status: 'processed'\n      }\n    });\n  }\n  return results;\n}\n\nconst rawContent = getResponseContent(llmBody);\n\nif (statusCode !== 200 || !rawContent) {\n  console.warn('[BriefAI W2] Fallback attivato. HTTP status:', statusCode);\n  return buildFallback(`HTTP ${statusCode} — LLM non disponibile`);\n}\n\nlet parsed = [];\ntry {\n  const jsonText = extractJsonArray(rawContent);\n  parsed = JSON.parse(jsonText);\n  if (!Array.isArray(parsed)) throw new Error('Risposta non è un array JSON');\n} catch (e) {\n  console.error('[BriefAI W2] JSON parse error:', e.message);\n  return buildFallback('JSON parse error: ' + e.message);\n}\n\nconst aiByIndex = {};\nconst aiByKey = {};\n\nfor (const item of parsed) {\n  if (!item || typeof item !== 'object') continue;\n  if (Number.isInteger(item.index)) aiByIndex[item.index] = item;\n  if (typeof item.uniqueKey === 'string' && item.uniqueKey.trim()) {\n    aiByKey[item.uniqueKey.trim()] = item;\n  }\n}\n\nfor (let i = 0; i < articles.length; i++) {\n  const article = articles[i];\n  const ai = aiByKey[String(article.uniqueKey || '').trim()] || aiByIndex[i + 1] || {};\n\n  const summary = String(ai.summary || fallbackSummary(article)).replace(/\\s+/g, ' ').trim().substring(0, 300);\n  const sentiment = ['Positive', 'Negative', 'Neutral'].includes(ai.sentiment) ? ai.sentiment : 'Neutral';\n\n  results.push({\n    json: {\n      _id: article._id,\n      uniqueKey: article.uniqueKey,\n      summary,\n      sentiment,\n      entities: Array.isArray(ai.entities) ? ai.entities : [],\n      macroTopics: sanitizeTopics(ai.macroTopics),\n      aiProcessed: true,\n      aiError: null,\n      processedAt: new Date().toISOString(),\n      status: 'processed'\n    }\n  });\n}\n\nreturn results;"
       },
-      "id": "6e000caa-8def-4ac7-9e2b-308130264f7d",
-      "name": "Prepare LLM Prompt2",
+      "id": "b3dadb95-d7da-47af-8f80-b646f572542e",
+      "name": "Parse LLM Response + Fallback",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2864,
-        2912
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "console.log('[BriefAI W2] Nessun articolo ready per LLM. Fine pipeline.');\nreturn [];"
-      },
-      "id": "0ad19107-08d6-4322-bd4c-5dbe24831ea9",
-      "name": "Stop — No Ready Articles2",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2448,
-        3120
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 1
-          },
-          "conditions": [
-            {
-              "id": "cond-ready-found",
-              "leftValue": "={{ $input.all().length }}",
-              "rightValue": 1,
-              "operator": {
-                "type": "number",
-                "operation": "gte"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "3ab17f42-6b80-4f04-8645-65f1c03f75a6",
-      "name": "IF — Ready Articles Found? (≥1)2",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        2304,
-        2912
-      ]
-    },
-    {
-      "parameters": {
-        "collection": "articles",
-        "options": {
-          "limit": 30,
-          "sort": "{ \"createdAt\": 1 }"
-        },
-        "query": "{ \"status\": \"ready\" }"
-      },
-      "id": "1cf05101-fe19-4481-9289-68dd76c61ee7",
-      "name": "MongoDB — Query Ready Articles2",
-      "type": "n8n-nodes-base.mongoDb",
-      "typeVersion": 1,
-      "position": [
-        2016,
-        2912
-      ],
-      "credentials": {
-        "mongoDb": {
-          "id": "kl41W3XZ89RwT7Gg",
-          "name": "MongoDB Atlas — BriefAI"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "update",
-        "collection": "articles",
-        "updateKey": "uniqueKey",
-        "fields": "content, status",
-        "options": {}
-      },
-      "id": "7f02ba26-7b05-4bf8-ac71-21fb8b3738d1",
-      "name": "MongoDB — Mark Ready (Non-Reuters)2",
-      "type": "n8n-nodes-base.mongoDb",
-      "typeVersion": 1,
-      "position": [
-        2592,
-        3872
-      ],
-      "credentials": {
-        "mongoDb": {
-          "id": "kl41W3XZ89RwT7Gg",
-          "name": "MongoDB Atlas — BriefAI"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "// Articolo non-Reuters: pulisci il content da eventuale HTML e segna come ready\nreturn $input.all().map(item => {\n  const raw = item.json.content || item.json.contentSnippet || item.json.title || '';\n  const cleanContent = raw\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n  return {\n    json: {\n      ...item.json,\n      content: cleanContent || item.json.title || '',\n      status: 'ready'\n    }\n  };\n});"
-      },
-      "id": "060f8286-ce3f-4746-8ad9-9afc414bfaa2",
-      "name": "Set — Ready (Non-Reuters)2",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2320,
-        3872
+        848,
+        16
       ]
     },
     {
@@ -251,82 +236,36 @@
         "operation": "update",
         "collection": "articles",
         "updateKey": "uniqueKey",
-        "fields": "content, status, enrichedAt, enrichmentOk",
+        "fields": "summary, sentiment, entities, macroTopics, aiProcessed, aiError, processedAt, status",
         "options": {}
       },
-      "id": "2b7a70c2-5453-4f40-a7e7-0e17e60816d8",
-      "name": "MongoDB — Update Enriched (Reuters)2",
+      "id": "7367a990-7fb0-4be1-a2f7-73be191d41ce",
+      "name": "MongoDB — Update to Processed",
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1,
       "position": [
-        2688,
-        3376
+        1120,
+        16
       ],
       "credentials": {
         "mongoDb": {
-          "id": "kl41W3XZ89RwT7Gg",
-          "name": "MongoDB Atlas — BriefAI"
+          "id": "8H9RCjis4RCBxoSI",
+          "name": "MongoDB account"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const httpRes = $input.first().json;\nconst article = $('IF — Is Reuters?2').first().json;\n\nlet content = '';\nlet enrichmentOk = false;\n\nconst statusCode = httpRes.statusCode || 0;\nconst rawBody = typeof httpRes.body === 'string'\n  ? httpRes.body\n  : (httpRes.body ? JSON.stringify(httpRes.body) : '');\n\nfunction decodeHtmlEntities(str) {\n  return String(str || '')\n    .replace(/&nbsp;/g, ' ')\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .replace(/&#x27;/g, \"'\")\n    .replace(/&#10;/g, ' ')\n    .replace(/&#13;/g, ' ');\n}\n\nfunction cleanText(str) {\n  return decodeHtmlEntities(str)\n    .replace(/<script[\\s\\S]*?<\\/script>/gi, ' ')\n    .replace(/<style[\\s\\S]*?<\\/style>/gi, ' ')\n    .replace(/<noscript[\\s\\S]*?<\\/noscript>/gi, ' ')\n    .replace(/<header[\\s\\S]*?<\\/header>/gi, ' ')\n    .replace(/<nav[\\s\\S]*?<\\/nav>/gi, ' ')\n    .replace(/<footer[\\s\\S]*?<\\/footer>/gi, ' ')\n    .replace(/<aside[\\s\\S]*?<\\/aside>/gi, ' ')\n    .replace(/<!--[\\s\\S]*?-->/g, ' ')\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nif (statusCode >= 200 && statusCode < 400 && rawBody.length > 300) {\n  try {\n    const text = cleanText(rawBody);\n\n    if (text.length > 300) {\n      content = text.substring(0, 3000);\n      enrichmentOk = true;\n      console.log('[BriefAI W2] ✅ Reuters arricchito (' + text.length + ' chars): ' + (article.title || '').substring(0, 60));\n    } else {\n      console.warn('[BriefAI W2] ⚠️ Testo troppo corto (' + text.length + ' chars), fallback necessario.');\n    }\n  } catch (e) {\n    console.error('[BriefAI W2] ❌ Errore estrazione Reuters:', e.message);\n  }\n} else {\n  console.warn('[BriefAI W2] ⚠️ HTTP ' + statusCode + ' per ' + (article.url || ''));\n}\n\nif (!enrichmentOk) {\n  let fallback = article.contentSnippet || article.content || '';\n  fallback = cleanText(fallback);\n\n  if (!fallback || fallback.length < 50) {\n    const title = (article.title || '').trim();\n    const source = (article.source || '').trim();\n    fallback = `${title}. (${source}) Notizia recente: ${title.toLowerCase()}.`;\n  }\n\n  content = fallback;\n  console.warn('[BriefAI W2] 🔄 Fallback usato: ' + (article.title || '').substring(0, 60));\n}\n\nreturn [{\n  json: {\n    ...article,\n    content,\n    status: 'ready',\n    enrichedAt: new Date().toISOString(),\n    enrichmentOk\n  }\n}];"
+        "jsCode": "const count = $input.all().length;\nconsole.log('[BriefAI W2] ✅ Batch LLM elaborato: ' + count + ' articoli → processed.');\nreturn $input.all();"
       },
-      "id": "ee432e2b-a74b-42b8-aba0-018bce92376e",
-      "name": "Extract Reuters Text2",
+      "id": "addd0c5d-4a6f-4021-90a4-6f2415b77d04",
+      "name": "Log — Batch LLM Complete",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2416,
-        3376
+        1408,
+        16
       ]
-    },
-    {
-      "parameters": {
-        "url": "={{ $json.url }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "User-Agent",
-              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            },
-            {
-              "name": "Accept",
-              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
-            },
-            {
-              "name": "Accept-Language",
-              "value": "en-US,en;q=0.5"
-            }
-          ]
-        },
-        "options": {
-          "redirect": {
-            "redirect": {
-              "maxRedirects": 8
-            }
-          },
-          "response": {
-            "response": {
-              "fullResponse": true,
-              "neverError": true
-            }
-          },
-          "timeout": 15000
-        }
-      },
-      "id": "667086b5-789f-4d56-b276-7b65508934c3",
-      "name": "HTTP — Fetch Reuters Page2",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2128,
-        3376
-      ],
-      "continueOnFail": true,
-      "notes": "Best-effort: Reuters può bloccare lo scraping. Il nodo continueOnFail garantisce che la pipeline non si blocchi."
     },
     {
       "parameters": {
@@ -352,106 +291,13 @@
         },
         "options": {}
       },
-      "id": "84ce7870-abf7-4124-a88b-0ad2985c7e47",
-      "name": "IF — Is Reuters?2",
+      "id": "abd78724-3d22-4a14-82b8-415f24879dcf",
+      "name": "IF — Is Reuters?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1808,
-        3472
-      ]
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "id": "8aee05d4-453e-40c4-999b-f3c250c6cf4e",
-      "name": "Split — Enrich 1 by 2",
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [
-        1504,
-        3232
-      ]
-    },
-    {
-      "parameters": {
-        "collection": "articles",
-        "options": {
-          "limit": 30,
-          "sort": "{ \"createdAt\": 1 }"
-        },
-        "query": "{ \"status\": \"raw\" }"
-      },
-      "id": "b4694909-6ecb-4c05-97e8-2d7dd06eb058",
-      "name": "MongoDB — Query Raw Articles2",
-      "type": "n8n-nodes-base.mongoDb",
-      "typeVersion": 1,
-      "position": [
-        1232,
-        3232
-      ],
-      "credentials": {
-        "mongoDb": {
-          "id": "kl41W3XZ89RwT7Gg",
-          "name": "MongoDB Atlas — BriefAI"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "minutes",
-              "minutesInterval": 20
-            }
-          ]
-        }
-      },
-      "id": "c855ad06-2c11-46bb-adf9-215415de5ef0",
-      "name": "Cron — Every 20 Min2",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        976,
-        3232
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "update",
-        "collection": "articles",
-        "updateKey": "uniqueKey",
-        "fields": "content, status, enrichedAt, enrichmentOk",
-        "options": {}
-      },
-      "id": "3b544cbe-e6da-48d9-8b30-660aecfecef1",
-      "name": "MongoDB — Update Enriched (HN)1",
-      "type": "n8n-nodes-base.mongoDb",
-      "typeVersion": 1,
-      "position": [
-        2864,
-        3632
-      ],
-      "credentials": {
-        "mongoDb": {
-          "id": "kl41W3XZ89RwT7Gg",
-          "name": "MongoDB Atlas — BriefAI"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const httpRes  = $input.first().json;\nconst article  = $('IF \\u2014 Is Hacker News?1').first().json;\n\nlet content      = '';\nlet enrichmentOk = false;\n\nconst statusCode = httpRes.statusCode || 0;\nconst rawBody    = typeof httpRes.body === 'string'\n  ? httpRes.body\n  : (httpRes.body ? JSON.stringify(httpRes.body) : '');\n\nfunction decodeHtmlEntities(str) {\n  return String(str || '')\n    .replace(/&nbsp;/g,  ' ')\n    .replace(/&amp;/g,   '&')\n    .replace(/&lt;/g,    '<')\n    .replace(/&gt;/g,    '>')\n    .replace(/&quot;/g,  '\"')\n    .replace(/&#39;/g,   \"'\")\n    .replace(/&#x27;/g,  \"'\")\n    .replace(/&#10;/g,   ' ')\n    .replace(/&#13;/g,   ' ');\n}\n\nfunction cleanText(str) {\n  return decodeHtmlEntities(str)\n    .replace(/<script[\\s\\S]*?<\\/script>/gi,     ' ')\n    .replace(/<style[\\s\\S]*?<\\/style>/gi,       ' ')\n    .replace(/<noscript[\\s\\S]*?<\\/noscript>/gi, ' ')\n    .replace(/<header[\\s\\S]*?<\\/header>/gi,     ' ')\n    .replace(/<nav[\\s\\S]*?<\\/nav>/gi,           ' ')\n    .replace(/<footer[\\s\\S]*?<\\/footer>/gi,     ' ')\n    .replace(/<aside[\\s\\S]*?<\\/aside>/gi,       ' ')\n    .replace(/<!--[\\s\\S]*?-->/g,                ' ')\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nif (statusCode >= 200 && statusCode < 400 && rawBody.length > 300) {\n  try {\n    const text = cleanText(rawBody);\n    if (text.length > 300) {\n      content      = text.substring(0, 3000);\n      enrichmentOk = true;\n      console.log('[BriefAI W2] \\u2705 HN arricchito (' + text.length + ' chars): ' + (article.title || '').substring(0, 60));\n    } else {\n      console.warn('[BriefAI W2] \\u26a0\\ufe0f Testo HN troppo corto (' + text.length + ' chars), uso fallback.');\n    }\n  } catch (e) {\n    console.error('[BriefAI W2] \\u274c Errore estrazione HN:', e.message);\n  }\n} else {\n  console.warn('[BriefAI W2] \\u26a0\\ufe0f HTTP ' + statusCode + ' per HN url: ' + (article.url || ''));\n}\n\nif (!enrichmentOk) {\n  let fallback = article.contentSnippet || article.content || '';\n  fallback = cleanText(fallback);\n  if (!fallback || fallback.length < 50) {\n    const title  = (article.title  || '').trim();\n    const source = (article.source || '').trim();\n    fallback = title + '. (' + source + ') ' + title.toLowerCase() + '.';\n  }\n  content = fallback;\n  console.warn('[BriefAI W2] \\ud83d\\udd04 Fallback HN usato: ' + (article.title || '').substring(0, 60));\n}\n\nreturn [{\n  json: {\n    ...article,\n    content,\n    status:      'ready',\n    enrichedAt:  new Date().toISOString(),\n    enrichmentOk\n  }\n}];"
-      },
-      "id": "4dcc529b-344d-4dc0-a3b6-efb17e25d030",
-      "name": "Extract HN Text1",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2592,
-        3632
+        -768,
+        576
       ]
     },
     {
@@ -489,16 +335,52 @@
           "timeout": 15000
         }
       },
-      "id": "ec1a3520-43b2-4c0b-a502-0765917a07e8",
-      "name": "HTTP — Fetch HN Page1",
+      "id": "3e6decc7-b130-4fac-bd11-beb6ba6477d6",
+      "name": "HTTP — Fetch Reuters Page",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2320,
-        3632
+        -448,
+        480
       ],
       "continueOnFail": true,
-      "notes": "Fetcha la pagina esterna linkata dalla notizia HN. continueOnFail evita blocchi su siti irraggiungibili."
+      "notes": "Best-effort: Reuters può bloccare lo scraping. Il nodo continueOnFail garantisce che la pipeline non si blocchi."
+    },
+    {
+      "parameters": {
+        "jsCode": "const httpRes = $input.first().json;\nconst article = $('IF — Is Reuters?').first().json;\n\nlet content = '';\nlet enrichmentOk = false;\n\nconst statusCode = httpRes.statusCode || 0;\nconst rawBody = typeof httpRes.body === 'string'\n  ? httpRes.body\n  : (httpRes.body ? JSON.stringify(httpRes.body) : '');\n\nfunction decodeHtmlEntities(str) {\n  return String(str || '')\n    .replace(/&nbsp;/g, ' ')\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .replace(/&#x27;/g, \"'\")\n    .replace(/&#10;/g, ' ')\n    .replace(/&#13;/g, ' ');\n}\n\nfunction cleanText(str) {\n  return decodeHtmlEntities(str)\n    .replace(/<script[\\s\\S]*?<\\/script>/gi, ' ')\n    .replace(/<style[\\s\\S]*?<\\/style>/gi, ' ')\n    .replace(/<noscript[\\s\\S]*?<\\/noscript>/gi, ' ')\n    .replace(/<header[\\s\\S]*?<\\/header>/gi, ' ')\n    .replace(/<nav[\\s\\S]*?<\\/nav>/gi, ' ')\n    .replace(/<footer[\\s\\S]*?<\\/footer>/gi, ' ')\n    .replace(/<aside[\\s\\S]*?<\\/aside>/gi, ' ')\n    .replace(/<!--[\\s\\S]*?-->/g, ' ')\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nif (statusCode >= 200 && statusCode < 400 && rawBody.length > 300) {\n  try {\n    const text = cleanText(rawBody);\n\n    if (text.length > 300) {\n      content = text.substring(0, 3000);\n      enrichmentOk = true;\n      console.log('[BriefAI W2] ✅ Reuters arricchito (' + text.length + ' chars): ' + (article.title || '').substring(0, 60));\n    } else {\n      console.warn('[BriefAI W2] ⚠️ Testo troppo corto (' + text.length + ' chars), fallback necessario.');\n    }\n  } catch (e) {\n    console.error('[BriefAI W2] ❌ Errore estrazione Reuters:', e.message);\n  }\n} else {\n  console.warn('[BriefAI W2] ⚠️ HTTP ' + statusCode + ' per ' + (article.url || ''));\n}\n\nif (!enrichmentOk) {\n  let fallback = article.contentSnippet || article.content || '';\n  fallback = cleanText(fallback);\n\n  if (!fallback || fallback.length < 50) {\n    const title = (article.title || '').trim();\n    const source = (article.source || '').trim();\n    fallback = `${title}. (${source}) Notizia recente: ${title.toLowerCase()}.`;\n  }\n\n  content = fallback;\n  console.warn('[BriefAI W2] 🔄 Fallback usato: ' + (article.title || '').substring(0, 60));\n}\n\nreturn [{\n  json: {\n    ...article,\n    content,\n    status: 'ready',\n    enrichedAt: new Date().toISOString(),\n    enrichmentOk\n  }\n}];"
+      },
+      "id": "af360578-5c97-4e4f-9992-4e02fd9b1384",
+      "name": "Extract Reuters Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "articles",
+        "updateKey": "uniqueKey",
+        "fields": "content, status, enrichedAt, enrichmentOk",
+        "options": {}
+      },
+      "id": "e87e1cf1-230c-4207-82d3-0456050f9189",
+      "name": "MongoDB — Update Enriched (Reuters)",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        112,
+        480
+      ],
+      "credentials": {
+        "mongoDb": {
+          "id": "8H9RCjis4RCBxoSI",
+          "name": "MongoDB account"
+        }
+      }
     },
     {
       "parameters": {
@@ -524,14 +406,132 @@
         },
         "options": {}
       },
-      "id": "7b31f618-ca5f-47d1-b741-f4f3f2f9f9d3",
-      "name": "IF — Is Hacker News?1",
+      "id": "5851668a-e8d8-4a36-92d7-bc3e0b3c483b",
+      "name": "IF — Is Hacker News?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        2032,
-        3744
+        -544,
+        848
       ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.5"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 8
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "cb66d1ec-0f7f-4ca0-a889-db0d4fd1adbe",
+      "name": "HTTP — Fetch HN Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -256,
+        736
+      ],
+      "continueOnFail": true,
+      "notes": "Fetcha la pagina esterna linkata dalla notizia HN. continueOnFail evita blocchi su siti irraggiungibili."
+    },
+    {
+      "parameters": {
+        "jsCode": "const httpRes  = $input.first().json;\nconst article  = $('IF \\u2014 Is Hacker News?1').first().json;\n\nlet content      = '';\nlet enrichmentOk = false;\n\nconst statusCode = httpRes.statusCode || 0;\nconst rawBody    = typeof httpRes.body === 'string'\n  ? httpRes.body\n  : (httpRes.body ? JSON.stringify(httpRes.body) : '');\n\nfunction decodeHtmlEntities(str) {\n  return String(str || '')\n    .replace(/&nbsp;/g,  ' ')\n    .replace(/&amp;/g,   '&')\n    .replace(/&lt;/g,    '<')\n    .replace(/&gt;/g,    '>')\n    .replace(/&quot;/g,  '\"')\n    .replace(/&#39;/g,   \"'\")\n    .replace(/&#x27;/g,  \"'\")\n    .replace(/&#10;/g,   ' ')\n    .replace(/&#13;/g,   ' ');\n}\n\nfunction cleanText(str) {\n  return decodeHtmlEntities(str)\n    .replace(/<script[\\s\\S]*?<\\/script>/gi,     ' ')\n    .replace(/<style[\\s\\S]*?<\\/style>/gi,       ' ')\n    .replace(/<noscript[\\s\\S]*?<\\/noscript>/gi, ' ')\n    .replace(/<header[\\s\\S]*?<\\/header>/gi,     ' ')\n    .replace(/<nav[\\s\\S]*?<\\/nav>/gi,           ' ')\n    .replace(/<footer[\\s\\S]*?<\\/footer>/gi,     ' ')\n    .replace(/<aside[\\s\\S]*?<\\/aside>/gi,       ' ')\n    .replace(/<!--[\\s\\S]*?-->/g,                ' ')\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nif (statusCode >= 200 && statusCode < 400 && rawBody.length > 300) {\n  try {\n    const text = cleanText(rawBody);\n    if (text.length > 300) {\n      content      = text.substring(0, 3000);\n      enrichmentOk = true;\n      console.log('[BriefAI W2] \\u2705 HN arricchito (' + text.length + ' chars): ' + (article.title || '').substring(0, 60));\n    } else {\n      console.warn('[BriefAI W2] \\u26a0\\ufe0f Testo HN troppo corto (' + text.length + ' chars), uso fallback.');\n    }\n  } catch (e) {\n    console.error('[BriefAI W2] \\u274c Errore estrazione HN:', e.message);\n  }\n} else {\n  console.warn('[BriefAI W2] \\u26a0\\ufe0f HTTP ' + statusCode + ' per HN url: ' + (article.url || ''));\n}\n\nif (!enrichmentOk) {\n  let fallback = article.contentSnippet || article.content || '';\n  fallback = cleanText(fallback);\n  if (!fallback || fallback.length < 50) {\n    const title  = (article.title  || '').trim();\n    const source = (article.source || '').trim();\n    fallback = title + '. (' + source + ') ' + title.toLowerCase() + '.';\n  }\n  content = fallback;\n  console.warn('[BriefAI W2] \\ud83d\\udd04 Fallback HN usato: ' + (article.title || '').substring(0, 60));\n}\n\nreturn [{\n  json: {\n    ...article,\n    content,\n    status:      'ready',\n    enrichedAt:  new Date().toISOString(),\n    enrichmentOk\n  }\n}];"
+      },
+      "id": "24b60939-2ed0-4d79-b4ba-dd171afef8c0",
+      "name": "Extract HN Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "articles",
+        "updateKey": "uniqueKey",
+        "fields": "content, status, enrichedAt, enrichmentOk",
+        "options": {}
+      },
+      "id": "40763a6f-23ab-468e-9395-3634b082d89f",
+      "name": "MongoDB — Update Enriched (HN)",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        288,
+        736
+      ],
+      "credentials": {
+        "mongoDb": {
+          "id": "8H9RCjis4RCBxoSI",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Articolo non-Reuters: pulisci il content da eventuale HTML e segna come ready\nreturn $input.all().map(item => {\n  const raw = item.json.content || item.json.contentSnippet || item.json.title || '';\n  const cleanContent = raw\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n  return {\n    json: {\n      ...item.json,\n      content: cleanContent || item.json.title || '',\n      status: 'ready'\n    }\n  };\n});"
+      },
+      "id": "d7a87ea2-8db7-426c-85a4-b325c66a5e57",
+      "name": "Set — Ready",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        976
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "articles",
+        "updateKey": "uniqueKey",
+        "fields": "content, status",
+        "options": {}
+      },
+      "id": "bacdee74-a8ce-4f5e-a6df-a7cbc8ce11a9",
+      "name": "MongoDB — Mark Ready",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        16,
+        976
+      ],
+      "credentials": {
+        "mongoDb": {
+          "id": "8H9RCjis4RCBxoSI",
+          "name": "MongoDB account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -541,73 +541,7 @@
         [],
         [
           {
-            "node": "Prepare LLM Prompt2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wait2": {
-      "main": [
-        [
-          {
-            "node": "MongoDB — Query Ready Articles2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Log — Batch LLM Complete2": {
-      "main": [
-        [
-          {
-            "node": "Split LLM — Batches of 1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "MongoDB — Update to Processed2": {
-      "main": [
-        [
-          {
-            "node": "Log — Batch LLM Complete2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Parse LLM Response + Fallback2": {
-      "main": [
-        [
-          {
-            "node": "MongoDB — Update to Processed2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenRouter — LLM Request2": {
-      "main": [
-        [
-          {
-            "node": "Parse LLM Response + Fallback2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare LLM Prompt2": {
-      "main": [
-        [
-          {
-            "node": "OpenRouter — LLM Request2",
+            "node": "Prepare LLM Prompt",
             "type": "main",
             "index": 0
           }
@@ -625,91 +559,7 @@
         ],
         [
           {
-            "node": "Stop — No Ready Articles2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "MongoDB — Query Ready Articles2": {
-      "main": [
-        [
-          {
-            "node": "IF — Ready Articles Found? (≥1)2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "MongoDB — Mark Ready (Non-Reuters)2": {
-      "main": [
-        [
-          {
-            "node": "Split — Enrich 1 by 2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set — Ready (Non-Reuters)2": {
-      "main": [
-        [
-          {
-            "node": "MongoDB — Mark Ready (Non-Reuters)2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "MongoDB — Update Enriched (Reuters)2": {
-      "main": [
-        [
-          {
-            "node": "Split — Enrich 1 by 2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract Reuters Text2": {
-      "main": [
-        [
-          {
-            "node": "MongoDB — Update Enriched (Reuters)2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP — Fetch Reuters Page2": {
-      "main": [
-        [
-          {
-            "node": "Extract Reuters Text2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF — Is Reuters?2": {
-      "main": [
-        [
-          {
-            "node": "HTTP — Fetch Reuters Page2",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "IF — Is Hacker News?1",
+            "node": "Stop — No Ready Articles",
             "type": "main",
             "index": 0
           }
@@ -720,21 +570,32 @@
       "main": [
         [
           {
-            "node": "Wait2",
+            "node": "Wait",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "IF — Is Reuters?2",
+            "node": "IF — Is Reuters?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "MongoDB — Query Raw Articles2": {
+    "Cron — Every 20 Min": {
+      "main": [
+        [
+          {
+            "node": "MongoDB — Query Raw Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB — Query Raw Articles": {
       "main": [
         [
           {
@@ -745,18 +606,124 @@
         ]
       ]
     },
-    "Cron — Every 20 Min2": {
+    "Wait": {
       "main": [
         [
           {
-            "node": "MongoDB — Query Raw Articles2",
+            "node": "MongoDB — Query Ready Articles",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "MongoDB — Update Enriched (HN)1": {
+    "MongoDB — Query Ready Articles": {
+      "main": [
+        [
+          {
+            "node": "IF — Ready Articles Found? (≥1)2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare LLM Prompt": {
+      "main": [
+        [
+          {
+            "node": "OpenRouter — LLM Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter — LLM Request": {
+      "main": [
+        [
+          {
+            "node": "Parse LLM Response + Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse LLM Response + Fallback": {
+      "main": [
+        [
+          {
+            "node": "MongoDB — Update to Processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB — Update to Processed": {
+      "main": [
+        [
+          {
+            "node": "Log — Batch LLM Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log — Batch LLM Complete": {
+      "main": [
+        [
+          {
+            "node": "Split LLM — Batches of 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Is Reuters?": {
+      "main": [
+        [
+          {
+            "node": "HTTP — Fetch Reuters Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF — Is Hacker News?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP — Fetch Reuters Page": {
+      "main": [
+        [
+          {
+            "node": "Extract Reuters Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Reuters Text": {
+      "main": [
+        [
+          {
+            "node": "MongoDB — Update Enriched (Reuters)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB — Update Enriched (Reuters)": {
       "main": [
         [
           {
@@ -767,40 +734,73 @@
         ]
       ]
     },
-    "Extract HN Text1": {
+    "IF — Is Hacker News?": {
       "main": [
         [
           {
-            "node": "MongoDB — Update Enriched (HN)1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP — Fetch HN Page1": {
-      "main": [
-        [
-          {
-            "node": "Extract HN Text1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF — Is Hacker News?1": {
-      "main": [
-        [
-          {
-            "node": "HTTP — Fetch HN Page1",
+            "node": "HTTP — Fetch HN Page",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Set — Ready (Non-Reuters)2",
+            "node": "Set — Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP — Fetch HN Page": {
+      "main": [
+        [
+          {
+            "node": "Extract HN Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract HN Text": {
+      "main": [
+        [
+          {
+            "node": "MongoDB — Update Enriched (HN)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB — Update Enriched (HN)": {
+      "main": [
+        [
+          {
+            "node": "Split — Enrich 1 by 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Ready": {
+      "main": [
+        [
+          {
+            "node": "MongoDB — Mark Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB — Mark Ready": {
+      "main": [
+        [
+          {
+            "node": "Split — Enrich 1 by 2",
             "type": "main",
             "index": 0
           }
@@ -814,12 +814,12 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "f3f395bd-2c8e-4d28-8b94-3d90606132be",
+  "versionId": "436e4eae-4499-4fb3-bb46-da5b36a8e701",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "b2acc3711f22c38e399ef50a7add4449155a2e524426d9c7ec1e22ae109e9664"
+    "instanceId": "5e4c9cb0120eadb7ee2e372a07c30ea339538530d60bf02df2415f94d5cf136b"
   },
   "nodeGroups": [],
-  "id": "rIxvovGvlWolqzVq",
+  "id": "Kf68FQcpAAxPtljt",
   "tags": []
 }

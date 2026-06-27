@@ -8,13 +8,13 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "b97f2be7-05b0-4fc6-a500-d3354342cc22",
+      "id": "9863fba8-230d-47aa-91f4-6ba52cdd57e9",
       "name": "Webhook — Feedback",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        592,
-        96
+        0,
+        0
       ],
       "webhookId": "briefai-feedback-webhook-001",
       "notes": "URL: POST https://TUO-DOMINIO-N8N/webhook/briefai/feedback\nBody JSON richiesto:\n{\n  \"userId\": \"user123\",\n  \"articleId\": \"<uniqueKey articolo>\",\n  \"vote\": 1   ← 1 = pollice su, -1 = pollice giù\n}"
@@ -23,13 +23,13 @@
       "parameters": {
         "jsCode": "const body      = $input.first().json?.body || {};\nconst userId    = body.userId    || null;\nconst articleId = body.articleId || null;\nconst vote      = parseInt(body.vote || '0', 10);\n\nif (!userId)                        throw new Error('userId mancante');\nif (!articleId)                     throw new Error('articleId mancante');\nif (vote !== 1 && vote !== -1)      throw new Error('vote deve essere 1 (like) o -1 (dislike)');\n\nconsole.log(`[BriefAI W4] Feedback ricevuto — userId=${userId} articleId=${articleId} vote=${vote}`);\n\nreturn [{ json: { userId, articleId, vote } }];"
       },
-      "id": "4d2f5b62-73ca-48f1-bc55-607fd8973025",
+      "id": "4c1d8f61-d654-43ba-a1ae-b611867fbf96",
       "name": "Extract Feedback Params",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        832,
-        96
+        240,
+        0
       ]
     },
     {
@@ -40,18 +40,18 @@
         },
         "query": "={ \"uniqueKey\": \"{{ $('Extract Feedback Params').first().json.articleId }}\" }"
       },
-      "id": "26e4990f-edfe-4a2e-b5d8-fe7caac1ea99",
+      "id": "a0ecf105-25e5-497d-96cd-3e057503f8c1",
       "name": "MongoDB — Fetch Article",
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1,
       "position": [
-        1072,
-        96
+        480,
+        0
       ],
       "credentials": {
         "mongoDb": {
-          "id": "kl41W3XZ89RwT7Gg",
-          "name": "MongoDB Atlas — BriefAI"
+          "id": "8H9RCjis4RCBxoSI",
+          "name": "MongoDB account"
         }
       },
       "notes": "Recupera l'articolo per sapere la sua category e source, usati per aggiornare i pesi dell'utente."
@@ -60,39 +60,39 @@
       "parameters": {
         "jsCode": "const article = $input.first().json;\nconst params  = $('Extract Feedback Params').first().json;\n\nif (!article || !article.uniqueKey) {\n  throw new Error(`Articolo non trovato: ${params.articleId}`);\n}\n\nreturn [{ json: {\n  userId:             params.userId,\n  articleId:          params.articleId,\n  vote:               params.vote,\n  articleMacroTopics: article.macroTopics || [],\n  articleSentiment:   article.sentiment   || 'Neutral',\n  articleSource:      article.source      || ''\n}}];"
       },
-      "id": "9bff0f5d-cc6b-4717-9136-b4ff36a0121f",
+      "id": "273ac625-c5b8-4af2-9fe4-ffc527496d70",
       "name": "Attach Article Metadata",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1312,
-        96
+        720,
+        0
       ]
     },
     {
       "parameters": {
         "jsCode": "// ============================================================\n// FEEDBACK LOOP ENGINE — BriefAI Workflow 4\n// Ogni like/dislike aggiusta il peso dei macroTopics dell'articolo\n// Pesi: range [0.0 – 2.4], step 0.2, default 1.0\n// ============================================================\n\nconst MACRO_TOPICS = [\n  'Intelligenza Artificiale', 'Cybersecurity', 'Business & Finanza',\n  'Politica & Geopolitica', 'Startup & Innovazione', 'Software & Sviluppo',\n  'Scienza & Ricerca', 'Energia & Ambiente', 'Economia & Mercati',\n  'Social Media & Cultura', 'Salute & Medicina', 'Trasporti & Mobilità'\n];\n\nconst profile = $input.first().json;\nconst meta    = $('Attach Article Metadata').first().json;\n\nconst STEP = 0.2;\nconst MIN  = 0.0;\nconst MAX  = 2.4;\n\n// Usa i pesi esistenti o inizializza a 1.0 per tutti i macroTopics\nconst weights = profile.weights || Object.fromEntries(MACRO_TOPICS.map(t => [t, 1.0]));\n\nconst macroTopics = meta.articleMacroTopics || [];\nconst vote        = meta.vote;\n\n// Aggiorna il peso per ogni macroTopic dell'articolo\nconst updatedTopics = {};\nfor (const topic of macroTopics) {\n  const current = weights[topic] !== undefined ? weights[topic] : 1.0;\n  const updated = parseFloat(\n    Math.min(MAX, Math.max(MIN, current + vote * STEP)).toFixed(2)\n  );\n  weights[topic]       = updated;\n  updatedTopics[topic] = { previous: current, new: updated };\n}\n\n// Gestione preferredSources:\n// Se like, aggiungi la source alle preferite (se non c'è già)\nconst preferredSources = profile.preferredSources || [];\nif (vote === 1 && meta.articleSource && !preferredSources.includes(meta.articleSource)) {\n  preferredSources.push(meta.articleSource);\n}\n\nconst feedbackSummary = {\n  macroTopics:    macroTopics,\n  updatedWeights: updatedTopics,\n  delta:          parseFloat((vote * STEP).toFixed(2)),\n  vote,\n  source:         meta.articleSource\n};\n\nconsole.log(`[BriefAI W4] Pesi aggiornati — macroTopics=${JSON.stringify(macroTopics)} (vote=${vote})`);\n\nreturn [{ json: {\n  userId:           meta.userId,\n  weights,\n  preferredSources,\n  updatedAt:        new Date().toISOString(),\n  _feedbackSummary: feedbackSummary\n}}];"
       },
-      "id": "65e0f3ba-07d4-4711-8ddc-98aaecd3b0d1",
+      "id": "683084db-ac9a-48b5-b24f-1adfd5085547",
       "name": "Compute Updated Weights",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1792,
-        96
+        1200,
+        0
       ]
     },
     {
       "parameters": {
         "jsCode": "// Log del risultato finale per debug\nconst summary = $('Compute Updated Weights').first().json._feedbackSummary;\nconsole.log(`[BriefAI W4] Profilo salvato. Riepilogo:`, JSON.stringify(summary));\nreturn $input.all();"
       },
-      "id": "c29950a1-2975-4d44-aa27-30b39f5f5878",
+      "id": "648a1bd7-0688-4e3c-8d0d-17b99c88b35a",
       "name": "Log Feedback Complete",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2272,
-        96
+        1680,
+        0
       ]
     },
     {
@@ -110,13 +110,13 @@
           }
         }
       },
-      "id": "369b5c23-5a57-42e2-af01-233b16d4b06a",
+      "id": "a1b3d7bd-ab5a-4727-aefd-d6e8ac13f7de",
       "name": "Respond — Feedback OK",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        2512,
-        96
+        1920,
+        0
       ]
     },
     {
@@ -127,18 +127,18 @@
         },
         "query": "={ \"userId\": \"{{ $('Extract Feedback Params').first().json.userId }}\" }"
       },
-      "id": "7c00e768-e40a-4e17-9d09-407b951bae6e",
+      "id": "218af3f9-e87a-4269-a2a7-0e6fb175d674",
       "name": "MongoDB — Fetch User Profile",
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1,
       "position": [
-        1552,
-        96
+        960,
+        0
       ],
       "credentials": {
         "mongoDb": {
-          "id": "kl41W3XZ89RwT7Gg",
-          "name": "MongoDB Atlas — BriefAI"
+          "id": "8H9RCjis4RCBxoSI",
+          "name": "MongoDB account"
         }
       }
     },
@@ -150,18 +150,18 @@
         "fields": "weights, preferredSources, updatedAt",
         "options": {}
       },
-      "id": "605aa904-47c5-4fcb-b46e-8d732116c1c9",
+      "id": "b3b4535b-c895-44f5-bdd9-f6ffe87a96c3",
       "name": "MongoDB — Save Updated Profile",
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1,
       "position": [
-        2032,
-        96
+        1440,
+        0
       ],
       "credentials": {
         "mongoDb": {
-          "id": "kl41W3XZ89RwT7Gg",
-          "name": "MongoDB Atlas — BriefAI"
+          "id": "8H9RCjis4RCBxoSI",
+          "name": "MongoDB account"
         }
       }
     }
@@ -263,11 +263,12 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "f4914b20-b4e4-483c-807b-e4a0a2f7f110",
+  "versionId": "e5f1e889-5874-404f-be49-99f50973b782",
   "meta": {
-    "instanceId": "b2acc3711f22c38e399ef50a7add4449155a2e524426d9c7ec1e22ae109e9664"
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5e4c9cb0120eadb7ee2e372a07c30ea339538530d60bf02df2415f94d5cf136b"
   },
   "nodeGroups": [],
-  "id": "hmIJrXOcYJrppB7X",
+  "id": "kJcJYqsN3dpEh4jc",
   "tags": []
 }

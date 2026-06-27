@@ -8,13 +8,13 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "79c0ba22-616f-497e-9704-862b66003c40",
+      "id": "c35e2fd0-02ba-4083-a197-c0eb1f3950e8",
       "name": "Webhook — Update Profile",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -224,
-        272
+        -1440,
+        528
       ],
       "webhookId": "briefai-profile-webhook-001",
       "notes": "URL: POST https://TUO-DOMINIO-N8N/webhook/briefai/profile/update\nBody JSON: {\n  \"userId\": \"user123\",\n  \"macroTopics\": [\"Intelligenza Artificiale\", \"Cybersecurity\"],\n  \"keywords\": [...],\n  \"weights\": {...},\n  \"sentimentPreference\": \"all\" | \"Positive\" | \"Negative\" | \"Neutral\"\n}"
@@ -23,13 +23,13 @@
       "parameters": {
         "jsCode": "const body   = $input.first().json?.body || {};\nconst userId = body.userId || null;\nif (!userId) throw new Error('userId mancante');\n\nconst update = { userId, updatedAt: new Date().toISOString() };\n\n// macroTopics = topic selezionati dall'utente (hard filter)\nif (body.macroTopics)         update.macroTopics         = body.macroTopics;\nif (body.keywords)            update.keywords            = body.keywords;\nif (body.weights)             update.weights             = body.weights;\nif (body.sentimentPreference) update.sentimentPreference = body.sentimentPreference;\nif (body.preferredSources)    update.preferredSources    = body.preferredSources;\n\nreturn [{ json: update }];"
       },
-      "id": "eef4cc43-5e84-452d-a457-13d0d78aeba2",
+      "id": "1ad111dc-6004-4a9a-bbdc-28ef8f2f2a0d",
       "name": "Prepare Profile Update",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        16,
-        272
+        -1200,
+        528
       ]
     },
     {
@@ -40,18 +40,18 @@
         "fields": "macroTopics, keywords, weights, sentimentPreference, preferredSources, updatedAt",
         "options": {}
       },
-      "id": "f41c694a-08e0-4232-bc3a-7a28632f7bd7",
+      "id": "ed0738db-e888-4a11-bc3e-d67061c91323",
       "name": "MongoDB — Save Updated Profile",
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1,
       "position": [
-        256,
-        272
+        -960,
+        528
       ],
       "credentials": {
         "mongoDb": {
-          "id": "kl41W3XZ89RwT7Gg",
-          "name": "MongoDB Atlas — BriefAI"
+          "id": "8H9RCjis4RCBxoSI",
+          "name": "MongoDB account"
         }
       }
     },
@@ -61,13 +61,13 @@
         "responseBody": "={{ JSON.stringify({ success: true, message: 'Profilo aggiornato con successo', userId: $json.userId }) }}",
         "options": {}
       },
-      "id": "65377bd4-52f2-4238-95b7-52fdecf96041",
+      "id": "35cefddb-9f3d-4163-99c5-79cfd4cd4913",
       "name": "Respond — Profile Updated",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        496,
-        272
+        -720,
+        528
       ]
     },
     {
@@ -77,13 +77,13 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "b99390ce-ed14-42ec-a3c6-24376ef94cb2",
+      "id": "1748f1e9-299e-454b-8cc4-c6ed8efb7e87",
       "name": "Webhook — Feed Request",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -224,
-        -112
+        -1440,
+        144
       ],
       "webhookId": "briefai-feed-webhook-001"
     },
@@ -91,13 +91,13 @@
       "parameters": {
         "jsCode": "const body   = $input.first().json?.body || {};\nconst userId = body.userId || body.user_id || null;\nconst limit  = parseInt(body.limit || '20', 10);\n\nif (!userId) throw new Error('userId mancante nella richiesta');\n\nreturn [{ json: { userId, limit } }];"
       },
-      "id": "9860c9ea-5ff3-4721-8158-2c87f747d2bc",
+      "id": "42247b36-40a4-48cd-82a4-885f4aa60100",
       "name": "Extract User Params",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        16,
-        -112
+        -1200,
+        144
       ]
     },
     {
@@ -108,18 +108,18 @@
         },
         "query": "={ \"userId\": \"{{ $('Extract User Params').first().json.userId }}\" }"
       },
-      "id": "781068cf-2a77-49cb-bacc-cd9fcc41acea",
+      "id": "a5f31e79-78cf-4d54-a2b5-3befcfb11ac5",
       "name": "MongoDB — Fetch User Profile",
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1,
       "position": [
-        256,
-        -112
+        -960,
+        144
       ],
       "credentials": {
         "mongoDb": {
-          "id": "kl41W3XZ89RwT7Gg",
-          "name": "MongoDB Atlas — BriefAI"
+          "id": "8H9RCjis4RCBxoSI",
+          "name": "MongoDB account"
         }
       }
     },
@@ -127,13 +127,13 @@
       "parameters": {
         "jsCode": "const item   = $input.first().json;\nconst userId = $('Extract User Params').first().json.userId;\nconst limit  = $('Extract User Params').first().json.limit;\n\nconst MACRO_TOPICS = [\n  'Intelligenza Artificiale', 'Cybersecurity', 'Business & Finanza',\n  'Politica & Geopolitica', 'Startup & Innovazione', 'Software & Sviluppo',\n  'Scienza & Ricerca', 'Energia & Ambiente', 'Economia & Mercati',\n  'Social Media & Cultura', 'Salute & Medicina', 'Trasporti & Mobilità'\n];\n\nconst defaultWeights = Object.fromEntries(MACRO_TOPICS.map(t => [t, 1.0]));\n\nif (!item || !item.userId) {\n  console.warn(`[BriefAI W3] Profilo non trovato per userId=${userId}. Uso default.`);\n  return [{ json: {\n    userId, limit,\n    profile: {\n      macroTopics:         MACRO_TOPICS,   // default = tutti i topic\n      keywords:            [],\n      weights:             defaultWeights,\n      sentimentPreference: 'all',\n      preferredSources:    []\n    }\n  }}];\n}\n\nreturn [{ json: {\n  userId, limit,\n  profile: {\n    macroTopics:         item.macroTopics         || MACRO_TOPICS,\n    keywords:            item.keywords            || [],\n    weights:             item.weights             || defaultWeights,\n    sentimentPreference: item.sentimentPreference || 'all',\n    preferredSources:    item.preferredSources    || []\n  }\n}}];"
       },
-      "id": "d4406539-84b3-4d7c-b27d-6be2cbba0327",
+      "id": "4b7ac739-985b-4f55-b794-5f11d8e435f7",
       "name": "Normalize Profile",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        496,
-        -112
+        -720,
+        144
       ]
     },
     {
@@ -145,45 +145,45 @@
         },
         "query": "{ \"status\": \"processed\" }"
       },
-      "id": "f3530eb0-7038-459c-84da-2b84b4a50ef5",
+      "id": "6cade34f-e9a0-4f2e-85a0-b63aa11b6644",
       "name": "MongoDB — Fetch Enriched Articles",
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1,
       "position": [
-        736,
-        -112
+        -480,
+        144
       ],
       "credentials": {
         "mongoDb": {
-          "id": "kl41W3XZ89RwT7Gg",
-          "name": "MongoDB Atlas — BriefAI"
+          "id": "8H9RCjis4RCBxoSI",
+          "name": "MongoDB account"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "// ============================================================\n// RANKING ENGINE — BriefAI Workflow 3\n// score = weighted_interest(55%) + keyword_match(25%) + recency(15%) + source_bonus\n// HARD FILTER: vengono mostrati SOLO gli articoli appartenenti\n//              ai macroTopics selezionati dall'utente.\n// ============================================================\n\nconst profileData = $('Normalize Profile').first().json;\nconst { profile, limit } = profileData;\nconst articles = $input.all().map(i => i.json);\n\nconst now           = Date.now();\nconst MAX_AGE_HOURS = 168;\n\n// ------------------------------------------------------------------\n// HARD FILTER PER MACRO-TOPIC\n// Mostra solo articoli che matchano almeno uno dei topic selezionati.\n// Se l'utente non ha selezionato nulla (caso anomalo) mostra tutto.\n// ------------------------------------------------------------------\nconst selectedTopics = profile.macroTopics || [];\n\nconst filtered = selectedTopics.length === 0\n  ? articles\n  : articles.filter(a =>\n      (a.macroTopics || []).some(t => selectedTopics.includes(t))\n    );\n\nconsole.log(`[BriefAI W3] Articoli totali: ${articles.length} | Dopo hard filter topic: ${filtered.length} | Topic selezionati: ${selectedTopics.join(', ')}`);\n\n// ------------------------------------------------------------------\n// FUNZIONI DI SCORING\n// ------------------------------------------------------------------\nfunction recencyScore(pubDateStr) {\n  if (!pubDateStr) return 0;\n  const pub = new Date(pubDateStr).getTime();\n  if (isNaN(pub)) return 0;\n  const ageHours = (now - pub) / 3600000;\n  if (ageHours <= 0)             return 1.0;\n  if (ageHours >= MAX_AGE_HOURS) return 0.0;\n  return 1 - (ageHours / MAX_AGE_HOURS);\n}\n\nfunction keywordScore(article, keywords) {\n  if (!keywords || keywords.length === 0) return 0.5;\n  const haystack = [\n    article.title   || '',\n    article.summary || '',\n    article.content || ''\n  ].join(' ').toLowerCase();\n  let matches = 0;\n  for (const kw of keywords) {\n    if (haystack.includes(kw.toLowerCase())) matches++;\n  }\n  return Math.min(matches / keywords.length, 1.0);\n}\n\nfunction interestScore(article, weights, selectedTopics) {\n  const articleTopics = (article.macroTopics || []).filter(t => selectedTopics.includes(t));\n  if (articleTopics.length === 0) return 0.5;\n  const scores = articleTopics.map(t => weights[t] !== undefined ? Math.min(weights[t] / 1.5, 1.0) : 0.5);\n  return Math.max(...scores);\n}\n\nfunction sentimentBonus(article, preference) {\n  if (preference === 'all') return 0.1;\n  return article.sentiment === preference ? 0.2 : 0.0;\n}\n\nfunction sourceBonus(article, preferredSources) {\n  if (!preferredSources || preferredSources.length === 0) return 0;\n  return preferredSources.includes(article.source) ? 0.1 : 0.0;\n}\n\n// ------------------------------------------------------------------\n// SCORING LOOP\n// ------------------------------------------------------------------\nconst scored = [];\n\nfor (const article of filtered) {\n  const rScore   = recencyScore(article.pubDate);\n  const kScore   = keywordScore(article, profile.keywords);\n  const iScore   = interestScore(article, profile.weights, selectedTopics);\n  const sBonus   = sentimentBonus(article, profile.sentimentPreference);\n  const srcBonus = sourceBonus(article, profile.preferredSources);\n\n  const totalScore =\n    (iScore * 0.55) +\n    (kScore * 0.25) +\n    (rScore * 0.15) +\n    sBonus          +\n    srcBonus;\n\n  scored.push({\n    data: article,\n    _score: parseFloat(totalScore.toFixed(4)),\n    _scoreBreakdown: {\n      weighted_interest: parseFloat((iScore * 0.55).toFixed(4)),\n      keyword_match:     parseFloat((kScore * 0.25).toFixed(4)),\n      recency:           parseFloat((rScore * 0.15).toFixed(4)),\n      sentiment_bonus:   parseFloat(sBonus.toFixed(4)),\n      source_bonus:      parseFloat(srcBonus.toFixed(4))\n    }\n  });\n}\n\nscored.sort((a, b) => b._score - a._score);\nconst feed = scored.slice(0, limit);\n\n// ------------------------------------------------------------------\n// RESPONSE\n// ------------------------------------------------------------------\nconst response = {\n  userId:        profileData.userId,\n  generatedAt:   new Date().toISOString(),\n  totalFetched:  articles.length,\n  totalFiltered: filtered.length,\n  totalReturned: feed.length,\n  profile: {\n    macroTopics:         selectedTopics,\n    sentimentPreference: profile.sentimentPreference\n  },\n  articles: feed.map(a => ({\n    id:             a.data.uniqueKey,\n    title:          a.data.title,\n    url:            a.data.url,\n    source:         a.data.source,\n    macroTopics:    a.data.macroTopics || [],\n    pubDate:        a.data.pubDate,\n    summary:        a.data.summary,\n    sentiment:      a.data.sentiment,\n    entities:       a.data.entities    || [],\n    score:          a._score,\n    scoreBreakdown: a._scoreBreakdown\n  }))\n};\n\nreturn [{ json: response }];\n"
+        "jsCode": "// ============================================================\n// RANKING ENGINE — BriefAI Workflow 3\n// score = weighted_interest(55%) + keyword_match(25%) + recency(15%) + source_bonus\n// HARD FILTER: vengono mostrati SOLO gli articoli appartenenti\n//              ai macroTopics selezionati dall'utente.\n// ============================================================\n\nconst profileData = $('Normalize Profile').first().json;\nconst { profile, limit } = profileData;\nconst articles = $input.all().map(i => i.json);\n\nconst now           = Date.now();\nconst MAX_AGE_HOURS = 168;\n\n// ------------------------------------------------------------------\n// HARD FILTER PER MACRO-TOPIC\n// Mostra solo articoli che matchano almeno uno dei topic selezionati.\n// Se l'utente non ha selezionato nulla (caso anomalo) mostra tutto.\n// ------------------------------------------------------------------\nconst selectedTopics = profile.macroTopics || [];\n\nconst filtered = selectedTopics.length === 0\n  ? articles\n  : articles.filter(a =>\n      (a.macroTopics || []).some(t => selectedTopics.includes(t))\n    );\n\nconsole.log(`[BriefAI W3] Articoli totali: ${articles.length} | Dopo hard filter topic: ${filtered.length} | Topic selezionati: ${selectedTopics.join(', ')}`);\n\n// ------------------------------------------------------------------\n// FUNZIONI DI SCORING\n// ------------------------------------------------------------------\nfunction recencyScore(pubDateStr) {\n  if (!pubDateStr) return 0;\n  const pub = new Date(pubDateStr).getTime();\n  if (isNaN(pub)) return 0;\n  const ageHours = (now - pub) / 3600000;\n  if (ageHours <= 0)             return 1.0;\n  if (ageHours >= MAX_AGE_HOURS) return 0.0;\n  return 1 - (ageHours / MAX_AGE_HOURS);\n}\n\nfunction keywordScore(article, keywords) {\n  if (!keywords || keywords.length === 0) return 0.5;\n  const haystack = [\n    article.title   || '',\n    article.summary || '',\n    article.content || ''\n  ].join(' ').toLowerCase();\n  let matches = 0;\n  for (const kw of keywords) {\n    if (haystack.includes(kw.toLowerCase())) matches++;\n  }\n  return Math.min(matches / keywords.length, 1.0);\n}\n\n// interestScore: usa il peso del macrotopic con score più alto tra\n// quelli dell'articolo che l'utente ha selezionato\nfunction interestScore(article, weights, selectedTopics) {\n  const articleTopics = (article.macroTopics || []).filter(t => selectedTopics.includes(t));\n  if (articleTopics.length === 0) return 0.5;\n  const scores = articleTopics.map(t => weights[t] !== undefined ? Math.min(weights[t] / 1.5, 1.0) : 0.5);\n  return Math.max(...scores);\n}\n\nfunction sentimentBonus(article, preference) {\n  if (preference === 'all') return 0.1;\n  return article.sentiment === preference ? 0.2 : 0.0;\n}\n\nfunction sourceBonus(article, preferredSources) {\n  if (!preferredSources || preferredSources.length === 0) return 0;\n  return preferredSources.includes(article.source) ? 0.1 : 0.0;\n}\n\n// ------------------------------------------------------------------\n// SCORING LOOP\n// ------------------------------------------------------------------\nconst scored = [];\n\nfor (const article of filtered) {\n  const rScore   = recencyScore(article.pubDate);\n  const kScore   = keywordScore(article, profile.keywords);\n  const iScore   = interestScore(article, profile.weights, selectedTopics);\n  const sBonus   = sentimentBonus(article, profile.sentimentPreference);\n  const srcBonus = sourceBonus(article, profile.preferredSources);\n\n  const totalScore =\n    (iScore * 0.55) +\n    (kScore * 0.25) +\n    (rScore * 0.15) +\n    sBonus          +\n    srcBonus;\n\n  scored.push({\n    data: article,\n    _score: parseFloat(totalScore.toFixed(4)),\n    _scoreBreakdown: {\n      weighted_interest: parseFloat((iScore * 0.55).toFixed(4)),\n      keyword_match:     parseFloat((kScore * 0.25).toFixed(4)),\n      recency:           parseFloat((rScore * 0.15).toFixed(4)),\n      sentiment_bonus:   parseFloat(sBonus.toFixed(4)),\n      source_bonus:      parseFloat(srcBonus.toFixed(4))\n    }\n  });\n}\n\nscored.sort((a, b) => b._score - a._score);\nconst feed = scored.slice(0, limit);\n\n// ------------------------------------------------------------------\n// RESPONSE\n// ------------------------------------------------------------------\nconst response = {\n  userId:        profileData.userId,\n  generatedAt:   new Date().toISOString(),\n  totalFetched:  articles.length,\n  totalFiltered: filtered.length,\n  totalReturned: feed.length,\n  profile: {\n    macroTopics:         selectedTopics,\n    sentimentPreference: profile.sentimentPreference\n  },\n  articles: feed.map(a => ({\n    id:             a.data.uniqueKey || a.data._id,  // ✅ FIX: uniqueKey ha priorità sull'ObjectId\n    title:          a.data.title,\n    url:            a.data.url,\n    source:         a.data.source,\n    macroTopics:    a.data.macroTopics || [],\n    pubDate:        a.data.pubDate,\n    summary:        a.data.summary,\n    sentiment:      a.data.sentiment,\n    entities:       a.data.entities    || [],\n    score:          a._score,\n    scoreBreakdown: a._scoreBreakdown\n  }))\n};\n\nreturn [{ json: response }];"
       },
-      "id": "6ed62537-3647-443c-9043-2d0f1222e8e6",
+      "id": "ed8c0b42-f570-4753-92e8-0ea756fa7ae1",
       "name": "Ranking Engine",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        976,
-        -112
+        -240,
+        144
       ]
     },
     {
       "parameters": {
         "jsCode": "// FIX BUG 7: prepara esplicitamente il campo lastFeedGeneratedAt\nconst rankingOutput = $input.first().json;\nreturn [{ json: {\n  userId:                rankingOutput.userId,\n  lastFeedGeneratedAt:   rankingOutput.generatedAt\n}}];"
       },
-      "id": "0b6a8ebd-75dd-49bf-8604-3e1bd2fb3f83",
+      "id": "efb9eb80-ee9a-40e0-a53b-150c78e76b6b",
       "name": "Prepare Timestamp Update",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1216,
-        -256
+        0,
+        0
       ]
     },
     {
@@ -194,18 +194,18 @@
         "fields": "lastFeedGeneratedAt",
         "options": {}
       },
-      "id": "52b10aa4-5c19-4c59-b559-5ce89d22389e",
+      "id": "4d647be5-bd6b-4088-85d7-e177e4c837c7",
       "name": "MongoDB — Update User Feed Timestamp",
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1,
       "position": [
-        1456,
-        -256
+        240,
+        0
       ],
       "credentials": {
         "mongoDb": {
-          "id": "kl41W3XZ89RwT7Gg",
-          "name": "MongoDB Atlas — BriefAI"
+          "id": "8H9RCjis4RCBxoSI",
+          "name": "MongoDB account"
         }
       }
     },
@@ -228,13 +228,13 @@
           }
         }
       },
-      "id": "48b16d57-d2a4-482a-ae07-38cfdaf237f3",
+      "id": "26595e28-a03c-472d-8e8b-733cd8ba5121",
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        1216,
-        -16
+        0,
+        240
       ]
     }
   ],
@@ -362,11 +362,12 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "b9162dc3-7826-46d3-89f3-74d0a47fb41a",
+  "versionId": "ec036aab-5b47-4373-9919-a7242df85c05",
   "meta": {
-    "instanceId": "b2acc3711f22c38e399ef50a7add4449155a2e524426d9c7ec1e22ae109e9664"
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5e4c9cb0120eadb7ee2e372a07c30ea339538530d60bf02df2415f94d5cf136b"
   },
   "nodeGroups": [],
-  "id": "mFfjO29ZFDEeqt84",
+  "id": "lTJvZBGmhZtZwr9z",
   "tags": []
 }

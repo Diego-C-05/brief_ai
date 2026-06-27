@@ -6,6 +6,9 @@ const morgan = require('morgan'); // logging delle richieste HTTP
 
 require('dotenv').config(); // carica le variabili d'ambiente da .env
 
+// Node.js su Windows usa c-ares che fallisce i lookup SRV; forziamo Google DNS.
+require('dns').setServers(['8.8.8.8', '8.8.4.4']);
+
 // Importa i gruppi di rotte.
 const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
